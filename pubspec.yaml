@@ -37,6 +37,11 @@ dependencies:
   firebase_core: ^4.14.0
   firebase_auth: ^6.6.0
   cloud_firestore: ^6.9.0
+  flutter_bloc: ^9.1.1
+  shared_preferences: ^2.5.5
+  top_snackbar_flutter: ^3.4.0
+  intl: ^0.20.3
+  fl_chart: ^0.70.2
 
 dev_dependencies:
   flutter_test:
