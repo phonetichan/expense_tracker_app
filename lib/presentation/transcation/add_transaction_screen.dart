@@ -1,59 +1,56 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
+
+import '../../core/utils/category_icon_utils.dart';
+import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';
+import '../category/category_form_screen.dart';
+import '../category/cubit/category_cubit.dart';
+import '../category/cubit/category_state.dart';
 import 'cubit/transcation_cubit.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
 
-  const AddTransactionScreen({
-    super.key,
-    this.transaction,
-  });
+  const AddTransactionScreen({super.key, this.transaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
 }
 
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
+  TransactionType _selectedType = TransactionType.expense;
+  String? _selectedCategoryId;
+  DateTime _selectedDate = DateTime.now();
+
   final _titleController = TextEditingController();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
 
-  bool _isSaving = false; // Add loading state to prevent double clicks
-
-  TransactionType _selectedType = TransactionType.expense;
-  String _selectedCategory = 'Food';
-  DateTime _selectedDate = DateTime.now();
-
-  final List<String> _categories = [
-    'Food',
-    'Transport',
-    'Bills',
-    'Salary',
-    'Entertainment',
-    'Education',
-    'Other',
-  ];
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-
     final transaction = widget.transaction;
-
     if (transaction != null) {
       _titleController.text = transaction.title;
       _amountController.text = transaction.amount.toString();
       _noteController.text = transaction.note ?? '';
-
       _selectedType = transaction.type;
-      _selectedCategory = transaction.category;
+      _selectedCategoryId = transaction.categoryId;
       _selectedDate = transaction.date;
     }
+
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    context.read<CategoryCubit>().loadCategories(
+      uid: uid,
+      type: _selectedType.name,
+    );
   }
 
   @override
@@ -65,25 +62,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Future<void> _saveTransaction() async {
-    if (_isSaving) return; // Prevent double execution
+    if (_isSaving) return;
 
     final title = _titleController.text.trim();
     final amount = double.tryParse(_amountController.text.trim());
     final note = _noteController.text.trim();
 
     if (title.isEmpty || amount == null || amount <= 0) {
-      SnackBarUtils.showError(context, 'Please enter valid transaction details.');
+      SnackBarUtils.showError(
+        context,
+        'Please enter valid transaction details.',
+      );
       return;
     }
 
-    setState(() => _isSaving = true); // Start loading
+    setState(() => _isSaving = true);
 
     final transaction = TransactionModel(
-      id: widget.transaction?.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          widget.transaction?.id ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       title: title,
       amount: amount,
       type: _selectedType,
-      category: _selectedCategory,
+      categoryId: _selectedCategoryId,
       date: _selectedDate,
       note: note.isEmpty ? null : note,
     );
@@ -98,20 +100,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       }
 
       if (!mounted) return;
-
       SnackBarUtils.showSuccess(
         context,
-        widget.transaction == null ? 'Transaction added successfully.' : 'Transaction updated successfully.',
+        widget.transaction == null
+            ? 'Transaction added successfully.'
+            : 'Transaction updated successfully.',
       );
-
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isSaving = false); // Stop loading on error
-
+      setState(() => _isSaving = false);
       SnackBarUtils.showError(
         context,
-        widget.transaction == null ? 'Failed to add transaction.' : 'Failed to update transaction.',
+        widget.transaction == null
+            ? 'Failed to add transaction.'
+            : 'Failed to update transaction.',
       );
     }
   }
@@ -124,7 +127,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FB),
+        backgroundColor: isDark
+            ? const Color(0xFF121212)
+            : const Color(0xFFF7F7FB),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -167,49 +172,57 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
               const SizedBox(height: 30),
               _buildLabel('Title'),
-            const SizedBox(height: 8),
-            _buildTextField(
-              controller: _titleController,
-              hint: 'e.g. Monthly Salary or Lunch',
-              prefix: const Icon(Icons.title_rounded, color: Colors.deepPurple),
-            ),
-            const SizedBox(height: 20),
-            _buildLabel('Amount'),
-            const SizedBox(height: 8),
-            _buildTextField(
-              controller: _amountController,
-              hint: '0',
-              prefix: Container(
-                width: 60,
-                alignment: Alignment.center,
-                child: const Text(
-                  'MMK',
-                  style: TextStyle(
-                    color: Colors.deepPurple,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _titleController,
+                hint: 'e.g. Monthly Salary or Lunch',
+                prefix: const Icon(
+                  Icons.title_rounded,
+                  color: Colors.deepPurple,
                 ),
               ),
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            ),
-            const SizedBox(height: 20),
-            _buildLabel('Category'),
-            const SizedBox(height: 8),
-            _buildDropdown(),
-            const SizedBox(height: 20),
-            _buildLabel('Date'),
-            const SizedBox(height: 8),
-            _buildDatePicker(context),
-            const SizedBox(height: 20),
-            _buildLabel('Note (Optional)'),
-            const SizedBox(height: 8),
-            _buildTextField(
-              controller: _noteController,
-              hint: 'Add a note...',
-              prefix: const Icon(Icons.note_add_outlined, color: Colors.deepPurple),
-              maxLines: 3,
-            ),
+              const SizedBox(height: 20),
+              _buildLabel('Amount'),
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _amountController,
+                hint: '0',
+                prefix: Container(
+                  width: 60,
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'Ks',
+                    style: TextStyle(
+                      color: Colors.deepPurple,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+              ),
+              const SizedBox(height: 20),
+              _buildLabel('Category'),
+              const SizedBox(height: 8),
+              _buildDropdown(),
+              const SizedBox(height: 20),
+              _buildLabel('Date'),
+              const SizedBox(height: 8),
+              _buildDatePicker(context),
+              const SizedBox(height: 20),
+              _buildLabel('Note (Optional)'),
+              const SizedBox(height: 8),
+              _buildTextField(
+                controller: _noteController,
+                hint: 'Add a note...',
+                prefix: const Icon(
+                  Icons.note_add_outlined,
+                  color: Colors.deepPurple,
+                ),
+                maxLines: 3,
+              ),
               const SizedBox(height: 40),
               SizedBox(
                 width: double.infinity,
@@ -230,33 +243,35 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     ],
                   ),
                   child: ElevatedButton(
-                  onPressed: _isSaving ? null : _saveTransaction,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                    onPressed: _isSaving ? null : _saveTransaction,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
+                    child: _isSaving
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : Text(
+                            isEditing
+                                ? 'Update Transaction'
+                                : 'Save Transaction',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   ),
-                  child: _isSaving
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          isEditing ? 'Update Transaction' : 'Save Transaction',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                ),
                 ),
               ),
               const SizedBox(height: 30),
@@ -264,6 +279,220 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdown() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    const addCategoryValue = '__add_category__';
+
+    return BlocBuilder<CategoryCubit, CategoryState>(
+      builder: (context, state) {
+        if (state is CategoryLoading) {
+          return Container(
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Center(
+              child: SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.deepPurple,
+                ),
+              ),
+            ),
+          );
+        }
+
+        if (state is CategoryError) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Failed to load categories.',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        if (state is CategoryLoaded) {
+          final categories = state.categories;
+
+          if (categories.isEmpty) {
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text('No categories available.'),
+            );
+          }
+
+          // Check whether currently selected category still exists
+          final categoryExists = categories.any(
+            (category) => category.id == _selectedCategoryId,
+          );
+
+          final selectedValue = categoryExists ? _selectedCategoryId : null;
+
+          return Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButtonFormField<String>(
+                value: selectedValue,
+
+                dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+
+                style: TextStyle(
+                  color: isDark ? Colors.white : Colors.black,
+                  fontSize: 16,
+                ),
+
+                decoration: const InputDecoration(border: InputBorder.none),
+
+                hint: const Text('Select category'),
+
+                items: [
+                  ...categories.map((category) {
+                    return DropdownMenuItem<String>(
+                      value: category.id,
+
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: Colors.deepPurple.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              getCategoryIcon(category.icon),
+                              color: Colors.deepPurple,
+                              size: 20,
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          Text(
+                            category.name,
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87,
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
+
+                  // =========================
+                  // ADD CATEGORY BUTTON
+                  // =========================
+                  const DropdownMenuItem<String>(
+                    value: addCategoryValue,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.deepPurple,
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Add Category',
+                          style: TextStyle(
+                            color: Colors.deepPurple,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                onChanged: (value) async {
+                  // User selected "Add Category"
+                  if (value == addCategoryValue) {
+                    final newCategory = await Navigator.push<CategoryModel>(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => CategoryFormScreen(
+                        ),
+                      ),
+                    );
+
+                    if (!mounted) return;
+
+                    // Reload categories after returning
+                    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+                    if (uid != null) {
+                      await context.read<CategoryCubit>().loadCategories(
+                        uid: uid,
+                        type: _selectedType.name,
+                      );
+                    }
+
+                    // Automatically select newly created category
+                    if (newCategory != null) {
+                      setState(() {
+                        _selectedCategoryId = newCategory.id;
+                      });
+                    }
+
+                    return;
+                  }
+
+                  // Normal category selection
+                  setState(() {
+                    _selectedCategoryId = value;
+                  });
+                },
+              ),
+            ),
+          );
+        }
+
+        return Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Align(
+            alignment: Alignment.centerLeft,
+            child: Text('Select category'),
+          ),
+        );
+      },
     );
   }
 
@@ -286,18 +515,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     required Color color,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedType = type;
-        });
+        setState(() => _selectedType = type);
+        final uid = FirebaseAuth.instance.currentUser!.uid;
+        context.read<CategoryCubit>().loadCategories(uid: uid, type: type.name);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
+          color: isSelected
+              ? color.withOpacity(0.2)
+              : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? color : Colors.transparent,
@@ -308,7 +538,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              type == TransactionType.income ? Icons.arrow_downward_rounded : Icons.arrow_upward_rounded,
+              type == TransactionType.income
+                  ? Icons.arrow_downward_rounded
+                  : Icons.arrow_upward_rounded,
               color: isSelected ? color : Colors.grey,
               size: 20,
             ),
@@ -316,7 +548,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? color : (isDark ? Colors.white : Colors.black87),
+                color: isSelected
+                    ? color
+                    : (isDark ? Colors.white : Colors.black87),
                 fontWeight: FontWeight.bold,
                 fontSize: 15,
               ),
@@ -335,7 +569,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     int maxLines = 1,
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -362,45 +595,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildDropdown() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButtonFormField<String>(
-          value: _selectedCategory,
-          dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          style: TextStyle(
-            color: isDark ? Colors.white : Colors.black,
-            fontSize: 16,
-          ),
-          decoration: const InputDecoration(border: InputBorder.none),
-          items: _categories.map((category) {
-            return DropdownMenuItem(
-              value: category,
-              child: Text(category),
-            );
-          }).toList(),
-          onChanged: (value) {
-            if (value != null) {
-              setState(() {
-                _selectedCategory = value;
-              });
-            }
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildDatePicker(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return InkWell(
       borderRadius: BorderRadius.circular(12),
       onTap: () async {
@@ -410,12 +606,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           firstDate: DateTime(2000),
           lastDate: DateTime(2100),
         );
-
-        if (date != null) {
-          setState(() {
-            _selectedDate = date;
-          });
-        }
+        if (date != null) setState(() => _selectedDate = date);
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -435,7 +626,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               ),
             ),
             const Spacer(),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.grey),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: Colors.grey,
+            ),
           ],
         ),
       ),

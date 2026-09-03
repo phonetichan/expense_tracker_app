@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/theme/theme_cubit.dart';
 import '../auth/cubit/auth_cubit.dart';
+import '../category/category_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -102,22 +103,6 @@ class ProfileScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  Positioned(
-                    bottom: 0,
-                    right: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: Colors.deepPurple,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.edit_outlined,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -152,6 +137,19 @@ class ProfileScreen extends StatelessWidget {
                   );
                 },
               ),
+            ),
+            _buildProfileItem(
+              context,
+              icon: Icons.category_outlined,
+              title: 'Categories',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const CategoryScreen(),
+                  ),
+                );
+              },
             ),
             _buildProfileItem(
               context,

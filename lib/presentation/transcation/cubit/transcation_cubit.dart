@@ -1,8 +1,10 @@
 import 'package:expense_tracker_app/presentation/transcation/cubit/transcation_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import '../../../data/model/transaction_model.dart';
 import '../../../domain/transaction_repository.dart';
 
+@injectable
 class TransactionCubit extends Cubit<TransactionState> {
   final TransactionRepository repository;
 

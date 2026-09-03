@@ -1,9 +1,13 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:expense_tracker_app/data/respositories/category_repository_impl.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker_app/data/respository/auth_respository.dart';
 import 'package:expense_tracker_app/data/respository/user_respository.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
+import 'package:injectable/injectable.dart';
 
+@injectable
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository authRepository;
   final UserRepository userRepository;
@@ -20,7 +24,6 @@ class AuthCubit extends Cubit<AuthState> {
       emit(AuthUnauthenticated());
     }
   }
-
   Future<void> register({
     required String name,
     required String email,
@@ -30,6 +33,10 @@ class AuthCubit extends Cubit<AuthState> {
     emit(AuthLoading());
 
     try {
+      print('🔵 Registration started');
+      print('📧 Email: $email');
+
+      // 1. Create Firebase Auth user
       final credential = await authRepository.register(
         email: email,
         password: password,
@@ -38,9 +45,16 @@ class AuthCubit extends Cubit<AuthState> {
       final user = credential.user;
 
       if (user == null) {
+        print('❌ Firebase user is null');
         emit(AuthError('Registration failed.'));
         return;
       }
+
+      print('✅ Firebase Auth user created');
+      print('👤 UID: ${user.uid}');
+
+      // 2. Create user profile
+      print('🟡 Creating user profile...');
 
       await userRepository.createUserProfile(
         uid: user.uid,
@@ -49,11 +63,35 @@ class AuthCubit extends Cubit<AuthState> {
         themeMode: themeMode,
       );
 
-      emit(AuthAuthenticated(email: email,));
+      print('✅ User profile created successfully');
+
+      // 3. Create default categories
+      print('🟡 Creating default categories...');
+
+      final categoryRepository = CategoryRepository(
+        firestore: FirebaseFirestore.instance,
+      );
+
+      await categoryRepository.createDefaultCategories(user.uid);
+
+      print('✅ Default categories created successfully');
+      print('📂 Categories path: users/${user.uid}/categories');
+
+      // 4. Registration complete
+      print('🎉 Registration completed successfully');
+
+      emit(AuthAuthenticated(email: email));
     } on FirebaseAuthException catch (e) {
+      print('❌ Firebase Auth Error');
+      print('Code: ${e.code}');
+      print('Message: ${e.message}');
+
       final message = _getAuthErrorMessage(e);
       emit(AuthError(message));
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ Registration Error: $e');
+      print('📍 StackTrace: $stackTrace');
+
       emit(AuthError('Registration failed. Please try again.'));
     }
   }

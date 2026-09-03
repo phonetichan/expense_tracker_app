@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/respository/user_respository.dart';
 
+@injectable
 class ThemeCubit extends Cubit<ThemeMode> {
   final UserRepository userRepository;
   static const String _themeKey = 'theme_mode';

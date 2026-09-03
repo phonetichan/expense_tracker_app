@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum TransactionType {
   income,
   expense,
@@ -8,7 +10,7 @@ class TransactionModel {
   final String title;
   final double amount;
   final TransactionType type;
-  final String category;
+  final String? categoryId;
   final DateTime date;
   final String? note;
 
@@ -17,25 +19,23 @@ class TransactionModel {
     required this.title,
     required this.amount,
     required this.type,
-    required this.category,
+    this.categoryId,
     required this.date,
     this.note,
   });
 
-  // Convert TransactionModel → Firestore Map
   Map<String, dynamic> toMap() {
     return {
       'id': id,
       'title': title,
       'amount': amount,
       'type': type.name,
-      'category': category,
-      'date': date.toIso8601String(),
+      'categoryId': categoryId,
+      'date': Timestamp.fromDate(date),
       'note': note,
     };
   }
 
-  // Convert Firestore Map → TransactionModel
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     return TransactionModel(
       id: map['id'] ?? '',
@@ -45,8 +45,10 @@ class TransactionModel {
             (value) => value.name == map['type'],
         orElse: () => TransactionType.expense,
       ),
-      category: map['category'] ?? '',
-      date: DateTime.parse(map['date']),
+      categoryId: map['categoryId'],
+      date: map['date'] is Timestamp
+          ? (map['date'] as Timestamp).toDate()
+          : DateTime.parse(map['date']),
       note: map['note'],
     );
   }

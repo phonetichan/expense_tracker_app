@@ -1,19 +1,17 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:expense_tracker_app/presentation/main/main_screen.dart';
-import 'package:expense_tracker_app/presentation/transcation/cubit/transcation_cubit.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:expense_tracker_app/core/theme/theme_cubit.dart';
-import 'package:expense_tracker_app/data/respositories/transaction_repository_impl.dart';
-import 'package:expense_tracker_app/data/respository/auth_respository.dart';
-import 'package:expense_tracker_app/data/respository/user_respository.dart';
+//DI & Config
 import 'package:expense_tracker_app/firebase_options.dart';
-import 'package:expense_tracker_app/presentation/auth/login_screen.dart';
-import 'package:expense_tracker_app/presentation/auth/cubit/auth_cubit.dart';
-import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
+import 'di/injector.dart';
+
+//Core & Logic
+import 'package:expense_tracker_app/core/theme/theme_cubit.dart';
+import 'package:expense_tracker_app/data/respository/auth_respository.dart';
+
+//Presentation
+import 'package:expense_tracker_app/presentation/presentation.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -22,38 +20,24 @@ void main() async {
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  final authRepository = AuthRepository();
-  final userRepository = UserRepository();
-  final themeCubit = ThemeCubit(userRepository: userRepository);
+  // 1. Initialize Dependency Injection (Builds the pantry)
+  await configureDependencies();
 
-  // 1. Load local theme immediately for fastest UI startup
+  // 2. Grabs tools from DI instead of manual creation
+  final themeCubit = inject<ThemeCubit>();
   await themeCubit.loadLocalTheme();
 
-  // 2. If user is already logged in, sync with Firestore in background
-  final user = authRepository.currentUser;
-  if (user != null) {
-    themeCubit.syncWithFirestore(user.uid);
+  final authRepo = inject<AuthRepository>();
+  if (authRepo.currentUser != null) {
+    themeCubit.syncWithFirestore(authRepo.currentUser!.uid);
   }
 
-  runApp(
-    MyApp(
-      authRepository: authRepository,
-      userRepository: userRepository,
-      themeCubit: themeCubit,
-    ),
-  );
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  final AuthRepository authRepository;
-  final UserRepository userRepository;
-  final ThemeCubit themeCubit;
-
   const MyApp({
     super.key,
-    required this.authRepository,
-    required this.userRepository,
-    required this.themeCubit,
   });
 
   @override
@@ -61,20 +45,13 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => AuthCubit(
-            authRepository: authRepository,
-            userRepository: userRepository,
-          )..checkAuthStatus(),
+          create: (_) => inject<AuthCubit>()..checkAuthStatus(),
         ),
         BlocProvider(
-          create: (_) => TransactionCubit(
-            TransactionRepositoryImpl(
-              firestore: FirebaseFirestore.instance,
-              auth: FirebaseAuth.instance,
-            ),
-          ),
+          create: (_) => inject<TransactionCubit>(),
         ),
-        BlocProvider.value(value: themeCubit),
+        BlocProvider(create: (_) => inject<CategoryCubit>(),),
+        BlocProvider.value(value: inject<ThemeCubit>(),),
       ],
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
@@ -87,7 +64,7 @@ class MyApp extends StatelessWidget {
         },
         child: BlocBuilder<ThemeCubit, ThemeMode>(
           builder: (context, themeMode) {
-            final user = authRepository.currentUser;
+            final user = inject<AuthRepository>().currentUser;
 
             return MaterialApp(
               navigatorKey: navigatorKey,

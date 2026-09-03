@@ -1,25 +1,91 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import '../../core/utils/category_icon_utils.dart';
+import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';
+import '../category/cubit/category_cubit.dart';
+import '../category/cubit/category_state.dart';
 import '../profile/profile_screen.dart';
 import '../transcation/add_transaction_screen.dart';
-import '../transcation/transaction_detail_screen.dart';
-import '../transcation/transcation_history_screen.dart';
 import '../transcation/cubit/transcation_cubit.dart';
 import '../transcation/cubit/transcation_state.dart';
+import '../transcation/transaction_detail_screen.dart';
+import '../transcation/transcation_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  DateTime _selectedMonth = DateTime.now();
+
   @override
   void initState() {
     super.initState();
-    context.read<TransactionCubit>().loadTransactions();
+
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid != null) {
+      context.read<TransactionCubit>().loadTransactions();
+      context.read<CategoryCubit>().loadAllCategories(uid: uid);
+    }
+  }
+
+  List<TransactionModel> _getMonthlyTransactions(
+    List<TransactionModel> transactions,
+  ) {
+    return transactions.where((transaction) {
+      return transaction.date.year == _selectedMonth.year &&
+          transaction.date.month == _selectedMonth.month;
+    }).toList();
+  }
+
+  Future<void> _showMonthPicker() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _selectedMonth,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedMonth = DateTime(picked.year, picked.month);
+      });
+    }
+  }
+
+  String _formatAmount(double amount) {
+    String formatted;
+    if (amount >= 1000000) {
+      final value = amount / 1000000;
+      formatted =
+          '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 1)}M';
+    } else if (amount >= 1000) {
+      final value = amount / 1000;
+      formatted =
+          '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 1)}K';
+    } else {
+      formatted = amount.toStringAsFixed(0);
+    }
+    return 'Ks $formatted';
+  }
+
+  CategoryModel? _findCategory(
+    List<CategoryModel> categories,
+    String? categoryId,
+  ) {
+    if (categoryId == null) return null;
+    try {
+      return categories.firstWhere((category) => category.id == categoryId);
+    } catch (_) {
+      return null;
+    }
   }
 
   @override
@@ -27,7 +93,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FB),
+      backgroundColor: isDark
+          ? const Color(0xFF121212)
+          : const Color(0xFFF7F7FB),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -55,116 +123,208 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<TransactionCubit, TransactionState>(
-        builder: (context, state) {
-          List<TransactionModel> transactions = [];
-          bool isLoading = false;
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<CategoryCubit, CategoryState>(
+            listener: (context, state) {
+              if (state is CategoryError) {
+                debugPrint('Category error: ${state.message}');
+              }
+            },
+          ),
+        ],
+        child: BlocBuilder<CategoryCubit, CategoryState>(
+          builder: (context, categoryState) {
+            return BlocBuilder<TransactionCubit, TransactionState>(
+              builder: (context, transactionState) {
+                List<TransactionModel> transactions = [];
+                bool isTransactionLoading = false;
 
-          if (state is TransactionLoading) {
-            transactions = state.transactions;
-            isLoading = true;
-          } else if (state is TransactionLoaded) {
-            transactions = state.transactions;
-          } else if (state is TransactionError) {
-            return Center(child: Text(state.message));
-          } else {
-            return const Center(child: CircularProgressIndicator(color: Colors.deepPurple));
-          }
+                if (transactionState is TransactionLoading) {
+                  transactions = transactionState.transactions;
+                  isTransactionLoading = true;
+                } else if (transactionState is TransactionLoaded) {
+                  transactions = transactionState.transactions;
+                } else if (transactionState is TransactionError) {
+                  return Center(child: Text(transactionState.message));
+                } else {
+                  return const Center(
+                    child: CircularProgressIndicator(color: Colors.deepPurple),
+                  );
+                }
 
-          double totalBalance = 0;
-          double totalIncome = 0;
-          double totalExpense = 0;
+                List<CategoryModel> categories = [];
+                bool isCategoryLoading = false;
 
-          for (var t in transactions) {
-            if (t.type == TransactionType.income) {
-              totalIncome += t.amount;
-              totalBalance += t.amount;
-            } else {
-              totalExpense += t.amount;
-              totalBalance -= t.amount;
-            }
-          }
+                if (categoryState is CategoryLoading) {
+                  isCategoryLoading = true;
+                } else if (categoryState is CategoryLoaded) {
+                  categories = categoryState.categories;
+                }
 
-          return Stack(
-            children: [
-              RefreshIndicator(
-                onRefresh: () async => context.read<TransactionCubit>().loadTransactions(),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildBalanceCard(totalBalance, totalIncome, totalExpense),
-                      const SizedBox(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'Recent Transactions',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black,
+                final monthlyTransactions = _getMonthlyTransactions(
+                  transactions,
+                );
+
+                double totalIncome = 0;
+                double totalExpense = 0;
+
+                for (final transaction in monthlyTransactions) {
+                  if (transaction.type == TransactionType.income) {
+                    totalIncome += transaction.amount;
+                  } else {
+                    totalExpense += transaction.amount;
+                  }
+                }
+
+                final totalBalance = totalIncome - totalExpense;
+
+                return Stack(
+                  children: [
+                    RefreshIndicator(
+                      onRefresh: () async {
+                        final uid = FirebaseAuth.instance.currentUser?.uid;
+                        if (uid != null) {
+                          await Future.wait([
+                            context.read<TransactionCubit>().loadTransactions(),
+                            context.read<CategoryCubit>().loadAllCategories(
+                              uid: uid,
                             ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const TransactionHistoryScreen(),
+                          ]);
+                        }
+                      },
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildMonthFilter(isDark),
+                            const SizedBox(height: 20),
+                            _buildBalanceCard(
+                              totalBalance,
+                              totalIncome,
+                              totalExpense,
+                            ),
+                            const SizedBox(height: 30),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    'Recent Transactions',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: isDark ? Colors.white : Colors.black87,
+                                    ),
+                                  ),
                                 ),
-                              );
-                            },
-                            child: const Text(
-                              'See All',
-                              style: TextStyle(color: Colors.deepPurple),
+                                InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => TransactionHistoryScreen(
+                                          selectedMonth: _selectedMonth,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: Colors.deepPurple.withOpacity(0.08),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Text(
+                                          'See All',
+                                          style: TextStyle(
+                                            color: Colors.deepPurple,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 13,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                        const Icon(
+                                          Icons.arrow_forward_ios_rounded,
+                                          size: 12,
+                                          color: Colors.deepPurple,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      if (transactions.isEmpty && !isLoading)
-                        const Center(
-                          child: Padding(
-                            padding: EdgeInsets.only(top: 50),
-                            child: Text(
-                              'No transactions yet',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ),
-                        )
-                      else
-                        ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: transactions.length > 5 ? 5 : transactions.length,
-                          itemBuilder: (context, index) {
-                            return _buildTransactionItem(
-                              context,
-                              transactions[index],
-                            );
-                          },
+                            const SizedBox(height: 10),
+                            if (isCategoryLoading && transactions.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.symmetric(vertical: 20),
+                                child: Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              )
+                            else if (monthlyTransactions.isEmpty &&
+                                !isTransactionLoading)
+                              const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.only(top: 50),
+                                  child: Text(
+                                    'No transactions yet',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                              )
+                            else
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                itemCount: monthlyTransactions.length > 5
+                                    ? 5
+                                    : monthlyTransactions.length,
+                                itemBuilder: (context, index) {
+                                  final transaction =
+                                      monthlyTransactions[index];
+                                  final category = _findCategory(
+                                    categories,
+                                    transaction.categoryId,
+                                  );
+                                  return _buildTransactionItem(
+                                    context,
+                                    transaction,
+                                    category,
+                                  );
+                                },
+                              ),
+                          ],
                         ),
-                    ],
-                  ),
-                ),
-              ),
-              if (isLoading)
-                const Positioned(
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  child: LinearProgressIndicator(
-                    color: Colors.deepPurple,
-                    backgroundColor: Colors.transparent,
-                    minHeight: 2,
-                  ),
-                ),
-            ],
-          );
-        },
+                      ),
+                    ),
+                    if (isTransactionLoading)
+                      const Positioned(
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        child: LinearProgressIndicator(
+                          color: Colors.deepPurple,
+                          backgroundColor: Colors.transparent,
+                          minHeight: 2,
+                        ),
+                      ),
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -206,7 +366,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            '${total.toStringAsFixed(0)} MMK',
+            _formatAmount(total),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 36,
@@ -262,7 +422,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
             Text(
-              '${amount.toStringAsFixed(0)} MMK',
+              _formatAmount(amount),
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,
@@ -278,6 +438,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildTransactionItem(
     BuildContext context,
     TransactionModel transaction,
+    CategoryModel? category,
   ) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isIncome = transaction.type == TransactionType.income;
@@ -285,6 +446,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
+        borderRadius: BorderRadius.circular(16),
         onTap: () {
           Navigator.push(
             context,
@@ -293,7 +455,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           );
         },
-        borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -312,13 +473,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: (isIncome ? Colors.green : Colors.redAccent).withOpacity(
-                    0.1,
-                  ),
+                  color: (isIncome ? Colors.green : Colors.redAccent)
+                      .withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
-                  _getCategoryIcon(transaction.category),
+                  getCategoryIcon(category?.icon ?? 'category'),
                   color: isIncome ? Colors.green : Colors.redAccent,
                   size: 24,
                 ),
@@ -330,6 +490,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   children: [
                     Text(
                       transaction.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
@@ -337,15 +499,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      DateFormat('MMM dd, yyyy').format(transaction.date),
-                      style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            category?.name ?? 'Unknown',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          '•',
+                          style: TextStyle(color: Colors.grey, fontSize: 12),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          DateFormat('MMM dd, yyyy').format(transaction.date),
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
-                '${isIncome ? '+' : '-'}${transaction.amount.toStringAsFixed(0)} MMK',
+                '${isIncome ? '+ ' : '- '}${_formatAmount(transaction.amount)}',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
@@ -359,24 +546,75 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Food':
-        return Icons.fastfood_rounded;
-      case 'Transport':
-        return Icons.directions_bus_rounded;
-      case 'Shopping':
-        return Icons.shopping_bag_rounded;
-      case 'Bills':
-        return Icons.receipt_long_rounded;
-      case 'Salary':
-        return Icons.payments_rounded;
-      case 'Entertainment':
-        return Icons.movie_rounded;
-      case 'Education':
-        return Icons.school_rounded;
-      default:
-        return Icons.category_rounded;
-    }
+  Widget _buildMonthFilter(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _selectedMonth = DateTime(
+                  _selectedMonth.year,
+                  _selectedMonth.month - 1,
+                );
+              });
+            },
+            icon: const Icon(Icons.chevron_left, color: Colors.deepPurple),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: _showMonthPicker,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.calendar_month_rounded,
+                    color: Colors.deepPurple,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    DateFormat('MMMM yyyy').format(_selectedMonth),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDark ? Colors.white : Colors.black,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.keyboard_arrow_down,
+                    color: Colors.deepPurple,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            onPressed: () {
+              setState(() {
+                _selectedMonth = DateTime(
+                  _selectedMonth.year,
+                  _selectedMonth.month + 1,
+                );
+              });
+            },
+            icon: const Icon(Icons.chevron_right, color: Colors.deepPurple),
+          ),
+        ],
+      ),
+    );
   }
 }
