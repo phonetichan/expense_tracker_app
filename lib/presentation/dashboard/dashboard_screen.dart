@@ -1,8 +1,10 @@
+import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_balance_card.dart';
+import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_month_filter.dart';
+import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_transaction_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
-import '../../core/utils/category_icon_utils.dart';
 import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';
 import '../category/cubit/category_cubit.dart';
@@ -11,7 +13,6 @@ import '../profile/profile_screen.dart';
 import '../transcation/add_transaction_screen.dart';
 import '../transcation/cubit/transcation_cubit.dart';
 import '../transcation/cubit/transcation_state.dart';
-import '../transcation/transaction_detail_screen.dart';
 import '../transcation/transcation_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -199,12 +200,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _buildMonthFilter(isDark),
+                            DashboardMonthFilter(
+                              selectedMonth: _selectedMonth,
+                              onMonthPickerTap: _showMonthPicker,
+                              onPreviousMonth: () {
+                                setState(() {
+                                  _selectedMonth = DateTime(
+                                    _selectedMonth.year,
+                                    _selectedMonth.month - 1,
+                                  );
+                                });
+                              },
+                              onNextMonth: () {
+                                setState(() {
+                                  _selectedMonth = DateTime(
+                                    _selectedMonth.year,
+                                    _selectedMonth.month + 1,
+                                  );
+                                });
+                              },
+                            ),
                             const SizedBox(height: 20),
-                            _buildBalanceCard(
-                              totalBalance,
-                              totalIncome,
-                              totalExpense,
+                            DashboardBalanceCard(
+                              totalBalance: totalBalance,
+                              totalIncome: totalIncome,
+                              totalExpense: totalExpense,
+                              formatAmount: _formatAmount,
                             ),
                             const SizedBox(height: 30),
                             Row(
@@ -297,10 +318,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     categories,
                                     transaction.categoryId,
                                   );
-                                  return _buildTransactionItem(
-                                    context,
-                                    transaction,
-                                    category,
+                                  return DashboardTransactionItem(
+                                    transaction: transaction,
+                                    category: category,
+                                    formatAmount: _formatAmount,
                                   );
                                 },
                               ),
@@ -339,282 +360,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildBalanceCard(double total, double income, double expense) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Colors.deepPurple, Color(0xFF9575CD)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.deepPurple.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          const Text(
-            'Total Balance',
-            style: TextStyle(color: Colors.white70, fontSize: 16),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _formatAmount(total),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 36,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildBalanceInfo(
-                Icons.arrow_upward,
-                'Income',
-                income,
-                Colors.greenAccent,
-              ),
-              Container(width: 1, height: 40, color: Colors.white24),
-              _buildBalanceInfo(
-                Icons.arrow_downward,
-                'Expenses',
-                expense,
-                Colors.redAccent,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBalanceInfo(
-    IconData icon,
-    String label,
-    double amount,
-    Color color,
-  ) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(color: Colors.white70, fontSize: 12),
-            ),
-            Text(
-              _formatAmount(amount),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTransactionItem(
-    BuildContext context,
-    TransactionModel transaction,
-    CategoryModel? category,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isIncome = transaction.type == TransactionType.income;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => TransactionDetailScreen(transaction: transaction),
-            ),
-          );
-        },
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.03),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: (isIncome ? Colors.green : Colors.redAccent)
-                      .withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  getCategoryIcon(category?.icon ?? 'category'),
-                  color: isIncome ? Colors.green : Colors.redAccent,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      transaction.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: isDark ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            category?.name ?? 'Unknown',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Colors.grey,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        const Text(
-                          '•',
-                          style: TextStyle(color: Colors.grey, fontSize: 12),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          DateFormat('MMM dd, yyyy').format(transaction.date),
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${isIncome ? '+ ' : '- '}${_formatAmount(transaction.amount)}',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                  color: isIncome ? Colors.green : Colors.redAccent,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMonthFilter(bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _selectedMonth = DateTime(
-                  _selectedMonth.year,
-                  _selectedMonth.month - 1,
-                );
-              });
-            },
-            icon: const Icon(Icons.chevron_left, color: Colors.deepPurple),
-          ),
-          Expanded(
-            child: GestureDetector(
-              onTap: _showMonthPicker,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.calendar_month_rounded,
-                    color: Colors.deepPurple,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateFormat('MMMM yyyy').format(_selectedMonth),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: isDark ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: Colors.deepPurple,
-                  ),
-                ],
-              ),
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              setState(() {
-                _selectedMonth = DateTime(
-                  _selectedMonth.year,
-                  _selectedMonth.month + 1,
-                );
-              });
-            },
-            icon: const Icon(Icons.chevron_right, color: Colors.deepPurple),
-          ),
-        ],
-      ),
-    );
-  }
 }

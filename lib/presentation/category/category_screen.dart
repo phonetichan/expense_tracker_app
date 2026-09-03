@@ -1,7 +1,7 @@
+import 'package:expense_tracker_app/presentation/category/widgets/category_list_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/utils/category_icon_utils.dart';
 import '../../data/model/category_model.dart';
 import 'category_form_screen.dart';
 import 'cubit/category_cubit.dart';
@@ -132,7 +132,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       _buildSectionTitle('Expense', isDark),
                       const SizedBox(height: 10),
                       ...expenseCategories.map(
-                        (category) => _buildCategoryItem(category),
+                        (category) => CategoryListItem(
+                          category: category,
+                          onEdit: () => _editCategory(category),
+                          onDelete: () => _deleteCategory(category),
+                        ),
                       ),
                       const SizedBox(height: 25),
                     ],
@@ -140,7 +144,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
                       _buildSectionTitle('Income', isDark),
                       const SizedBox(height: 10),
                       ...incomeCategories.map(
-                        (category) => _buildCategoryItem(category),
+                        (category) => CategoryListItem(
+                          category: category,
+                          onEdit: () => _editCategory(category),
+                          onDelete: () => _deleteCategory(category),
+                        ),
                       ),
                     ],
                   ],
@@ -177,108 +185,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
         color: isDark
             ? Colors.white70
             : Colors.black54,
-      ),
-    );
-  }
-
-  Widget _buildCategoryItem(
-      CategoryModel category,
-      ) {
-    final isDark =
-        Theme.of(context).brightness == Brightness.dark;
-
-    final isIncome = category.type == 'income';
-
-    final categoryColor =
-    isIncome ? Colors.green : Colors.redAccent;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark
-            ? const Color(0xFF1E1E1E)
-            : Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 14,
-          vertical: 4,
-        ),
-
-        leading: Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: categoryColor.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            getCategoryIcon(category.icon),
-            color: categoryColor,
-          ),
-        ),
-
-        title: Text(
-          category.name,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: isDark
-                ? Colors.white
-                : Colors.black87,
-          ),
-        ),
-
-        trailing: PopupMenuButton<String>(
-          icon: const Icon(
-            Icons.more_vert,
-            color: Colors.grey,
-          ),
-
-          onSelected: (value) {
-            if (value == 'edit') {
-              _editCategory(category);
-            }
-
-            if (value == 'delete') {
-              _deleteCategory(category);
-            }
-          },
-
-          itemBuilder: (context) => const [
-            PopupMenuItem(
-              value: 'edit',
-              child: Row(
-                children: [
-                  Icon(Icons.edit_outlined),
-                  SizedBox(width: 10),
-                  Text('Edit'),
-                ],
-              ),
-            ),
-            PopupMenuItem(
-              value: 'delete',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.delete_outline,
-                    color: Colors.redAccent,
-                  ),
-                  SizedBox(width: 10),
-                  Text('Delete'),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

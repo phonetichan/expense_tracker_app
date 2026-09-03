@@ -51,7 +51,9 @@ class MyApp extends StatelessWidget {
           create: (_) => inject<TransactionCubit>(),
         ),
         BlocProvider(create: (_) => inject<CategoryCubit>(),),
-        BlocProvider.value(value: inject<ThemeCubit>(),),
+        BlocProvider(
+          create: (_) => inject<ThemeCubit>(),
+        )
       ],
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {

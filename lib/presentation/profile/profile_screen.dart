@@ -1,3 +1,5 @@
+import 'package:expense_tracker_app/presentation/profile/widgets/profile_header.dart';
+import 'package:expense_tracker_app/presentation/profile/widgets/profile_menu_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -67,61 +69,9 @@ class ProfileScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const SizedBox(height: 20),
-            Center(
-              child: Stack(
-                children: [
-                  Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.deepPurple, width: 3),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipOval(
-                      child: Image.network(
-                        user?.photoURL ??
-                            'https://ui-avatars.com/api/?name=${user?.email?.split('@').first ?? 'User'}&background=673AB7&color=fff&size=256',
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return Container(
-                            color: Colors.deepPurple[100],
-                            child: const Icon(
-                              Icons.person,
-                              size: 60,
-                              color: Colors.deepPurple,
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              user?.email?.split('@').first ?? 'User Name',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: isDark ? Colors.white : Colors.black,
-              ),
-            ),
-            Text(
-              user?.email ?? 'No email',
-              style: const TextStyle(color: Colors.grey, fontSize: 16),
-            ),
+            ProfileHeader(user: user),
             const SizedBox(height: 40),
-            _buildProfileItem(
-              context,
+            ProfileMenuItem(
               icon: Icons.dark_mode_outlined,
               title: 'Dark Mode',
               trailing: BlocBuilder<ThemeCubit, ThemeMode>(
@@ -138,8 +88,7 @@ class ProfileScreen extends StatelessWidget {
                 },
               ),
             ),
-            _buildProfileItem(
-              context,
+            ProfileMenuItem(
               icon: Icons.category_outlined,
               title: 'Categories',
               onTap: () {
@@ -151,20 +100,17 @@ class ProfileScreen extends StatelessWidget {
                 );
               },
             ),
-            _buildProfileItem(
-              context,
+            ProfileMenuItem(
               icon: Icons.person_outline,
               title: 'Account Settings',
               onTap: () {},
             ),
-            _buildProfileItem(
-              context,
+            ProfileMenuItem(
               icon: Icons.notifications_none_outlined,
               title: 'Notifications',
               onTap: () {},
             ),
-            _buildProfileItem(
-              context,
+            ProfileMenuItem(
               icon: Icons.help_outline,
               title: 'Help Center',
               onTap: () {},
@@ -194,52 +140,6 @@ class ProfileScreen extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildProfileItem(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    Widget? trailing,
-    VoidCallback? onTap,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.deepPurple.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: Colors.deepPurple, size: 22),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-        trailing:
-            trailing ??
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
       ),
     );
   }

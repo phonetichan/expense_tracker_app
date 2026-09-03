@@ -5,13 +5,10 @@ import 'package:intl/intl.dart';
 
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 
-import '../../core/utils/category_icon_utils.dart';
-import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';
-import '../category/category_form_screen.dart';
 import '../category/cubit/category_cubit.dart';
-import '../category/cubit/category_state.dart';
 import 'cubit/transcation_cubit.dart';
+import 'widgets/category_dropdown_field.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionModel? transaction;
@@ -206,7 +203,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 20),
               _buildLabel('Category'),
               const SizedBox(height: 8),
-              _buildDropdown(),
+              CategoryDropdownField(
+                selectedType: _selectedType,
+                selectedCategoryId: _selectedCategoryId,
+                onCategoryChanged: (value) {
+                  setState(() => _selectedCategoryId = value);
+                },
+              ),
               const SizedBox(height: 20),
               _buildLabel('Date'),
               const SizedBox(height: 8),
@@ -279,220 +282,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDropdown() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    const addCategoryValue = '__add_category__';
-
-    return BlocBuilder<CategoryCubit, CategoryState>(
-      builder: (context, state) {
-        if (state is CategoryLoading) {
-          return Container(
-            height: 56,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Center(
-              child: SizedBox(
-                height: 22,
-                width: 22,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.deepPurple,
-                ),
-              ),
-            ),
-          );
-        }
-
-        if (state is CategoryError) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.error_outline, color: Colors.redAccent),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    'Failed to load categories.',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }
-
-        if (state is CategoryLoaded) {
-          final categories = state.categories;
-
-          if (categories.isEmpty) {
-            return Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Text('No categories available.'),
-            );
-          }
-
-          // Check whether currently selected category still exists
-          final categoryExists = categories.any(
-            (category) => category.id == _selectedCategoryId,
-          );
-
-          final selectedValue = categoryExists ? _selectedCategoryId : null;
-
-          return Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButtonFormField<String>(
-                value: selectedValue,
-
-                dropdownColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-
-                style: TextStyle(
-                  color: isDark ? Colors.white : Colors.black,
-                  fontSize: 16,
-                ),
-
-                decoration: const InputDecoration(border: InputBorder.none),
-
-                hint: const Text('Select category'),
-
-                items: [
-                  ...categories.map((category) {
-                    return DropdownMenuItem<String>(
-                      value: category.id,
-
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: Colors.deepPurple.withOpacity(0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              getCategoryIcon(category.icon),
-                              color: Colors.deepPurple,
-                              size: 20,
-                            ),
-                          ),
-
-                          const SizedBox(width: 12),
-
-                          Text(
-                            category.name,
-                            style: TextStyle(
-                              color: isDark ? Colors.white : Colors.black87,
-                              fontSize: 16,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  }),
-
-                  // =========================
-                  // ADD CATEGORY BUTTON
-                  // =========================
-                  const DropdownMenuItem<String>(
-                    value: addCategoryValue,
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.add_circle_outline,
-                          color: Colors.deepPurple,
-                        ),
-                        SizedBox(width: 12),
-                        Text(
-                          'Add Category',
-                          style: TextStyle(
-                            color: Colors.deepPurple,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-
-                onChanged: (value) async {
-                  // User selected "Add Category"
-                  if (value == addCategoryValue) {
-                    final newCategory = await Navigator.push<CategoryModel>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => CategoryFormScreen(
-                        ),
-                      ),
-                    );
-
-                    if (!mounted) return;
-
-                    // Reload categories after returning
-                    final uid = FirebaseAuth.instance.currentUser?.uid;
-
-                    if (uid != null) {
-                      await context.read<CategoryCubit>().loadCategories(
-                        uid: uid,
-                        type: _selectedType.name,
-                      );
-                    }
-
-                    // Automatically select newly created category
-                    if (newCategory != null) {
-                      setState(() {
-                        _selectedCategoryId = newCategory.id;
-                      });
-                    }
-
-                    return;
-                  }
-
-                  // Normal category selection
-                  setState(() {
-                    _selectedCategoryId = value;
-                  });
-                },
-              ),
-            ),
-          );
-        }
-
-        return Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Select category'),
-          ),
-        );
-      },
     );
   }
 

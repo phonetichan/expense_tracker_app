@@ -1,16 +1,17 @@
+import 'package:expense_tracker_app/presentation/transcation/widgets/month_slider.dart';
+import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_filter_chips.dart';
+import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_history_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../core/utils/category_icon_utils.dart';
 import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import 'cubit/transcation_cubit.dart';
 import 'cubit/transcation_state.dart';
-import 'transaction_detail_screen.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   final DateTime? selectedMonth;
@@ -193,7 +194,14 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
           return Column(
             children: [
-              _buildMonthSlider(),
+              MonthSlider(
+                selectedYear: _selectedYear,
+                selectedMonths: _selectedMonths,
+                months: _months,
+                scrollController: _scrollController,
+                onShowYearPicker: _showYearPicker,
+                onMonthToggle: _toggleMonth,
+              ),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -226,17 +234,11 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    _buildFilterChip('All'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Income'),
-                    const SizedBox(width: 8),
-                    _buildFilterChip('Expense'),
-                  ],
-                ),
+              TransactionFilterChips(
+                selectedFilter: _selectedFilter,
+                onFilterChanged: (filter) {
+                  setState(() => _selectedFilter = filter);
+                },
               ),
               const SizedBox(height: 10),
               Expanded(
@@ -281,10 +283,9 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                               type: transaction.type.name,
                             ),
                           );
-                          return _buildTransactionItem(
-                            context,
-                            transaction,
-                            category,
+                          return TransactionHistoryItem(
+                            transaction: transaction,
+                            category: category,
                           );
                         },
                       );
@@ -296,178 +297,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildMonthSlider() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 5),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.calendar_today_rounded,
-                size: 16,
-                color: Colors.deepPurple,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                "Year: $_selectedYear",
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              ),
-              const Spacer(),
-              TextButton(
-                onPressed: _showYearPicker,
-                child: const Text("Change Year", style: TextStyle(fontSize: 12)),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: 45,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 12,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            itemBuilder: (context, index) {
-              final month = DateTime(_selectedYear, index + 1);
-              final isSelected = _selectedMonths.any((m) => m.month == month.month && m.year == month.year);
-
-              return GestureDetector(
-                onTap: () => _toggleMonth(month),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(right: 8),
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? Colors.deepPurple : Colors.transparent,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: isSelected
-                          ? Colors.deepPurple
-                          : Colors.grey.withOpacity(0.3),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    DateFormat('MMM').format(month),
-                    style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.grey,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFilterChip(String filter) {
-    final isSelected = _selectedFilter == filter;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedFilter = filter),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.deepPurple
-                : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              if (!isSelected)
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-            ],
-          ),
-          child: Text(
-            filter,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTransactionItem(
-    BuildContext context,
-    TransactionModel transaction,
-    CategoryModel category,
-  ) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isIncome = transaction.type == TransactionType.income;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ListTile(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => TransactionDetailScreen(transaction: transaction),
-            ),
-          );
-        },
-        contentPadding: const EdgeInsets.all(12),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: (isIncome ? Colors.green : Colors.redAccent).withOpacity(
-              0.1,
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            getCategoryIcon(category.icon),
-            color: isIncome ? Colors.green : Colors.redAccent,
-            size: 24,
-          ),
-        ),
-        title: Text(
-          transaction.title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            color: isDark ? Colors.white : Colors.black,
-          ),
-        ),
-        subtitle: Text(
-          '${category.name} • ${DateFormat('MMM dd, yyyy').format(transaction.date)}',
-          style: const TextStyle(color: Colors.grey, fontSize: 12),
-        ),
-        trailing: Text(
-          '${isIncome ? '+ ' : '- '} Ks ${transaction.amount.toStringAsFixed(0)}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-            color: isIncome ? Colors.green : Colors.redAccent,
-          ),
-        ),
       ),
     );
   }
