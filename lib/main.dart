@@ -37,7 +37,7 @@ void main() async {
 
 class MyApp extends StatelessWidget {
   const MyApp({
-    super.key,
+    super.key
   });
 
   @override
@@ -51,9 +51,7 @@ class MyApp extends StatelessWidget {
           create: (_) => inject<TransactionCubit>(),
         ),
         BlocProvider(create: (_) => inject<CategoryCubit>(),),
-        BlocProvider(
-          create: (_) => inject<ThemeCubit>(),
-        )
+        BlocProvider(create: (_) => inject<ThemeCubit>(),)
       ],
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {

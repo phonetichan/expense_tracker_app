@@ -1,7 +1,9 @@
+import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_date_picker.dart';
+import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_text_field.dart';
+import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_type_selector.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 
@@ -144,33 +146,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTypeButton(
-                      context,
-                      type: TransactionType.income,
-                      label: 'Income',
-                      isSelected: _selectedType == TransactionType.income,
-                      color: Colors.green,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildTypeButton(
-                      context,
-                      type: TransactionType.expense,
-                      label: 'Expense',
-                      isSelected: _selectedType == TransactionType.expense,
-                      color: Colors.redAccent,
-                    ),
-                  ),
-                ],
+              TransactionTypeSelector(
+                selectedType: _selectedType,
+                onTypeChanged: (type) {
+                  setState(() => _selectedType = type);
+                },
               ),
               const SizedBox(height: 30),
               _buildLabel('Title'),
               const SizedBox(height: 8),
-              _buildTextField(
+              TransactionTextField(
                 controller: _titleController,
                 hint: 'e.g. Monthly Salary or Lunch',
                 prefix: const Icon(
@@ -181,7 +166,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 20),
               _buildLabel('Amount'),
               const SizedBox(height: 8),
-              _buildTextField(
+              TransactionTextField(
                 controller: _amountController,
                 hint: '0',
                 prefix: Container(
@@ -213,11 +198,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               const SizedBox(height: 20),
               _buildLabel('Date'),
               const SizedBox(height: 8),
-              _buildDatePicker(context),
+              TransactionDatePicker(
+                selectedDate: _selectedDate,
+                onDateChanged: (date) {
+                  setState(() => _selectedDate = date);
+                },
+              ),
               const SizedBox(height: 20),
               _buildLabel('Note (Optional)'),
               const SizedBox(height: 8),
-              _buildTextField(
+              TransactionTextField(
                 controller: _noteController,
                 hint: 'Add a note...',
                 prefix: const Icon(
@@ -292,136 +282,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         fontSize: 15,
         fontWeight: FontWeight.w600,
         color: Colors.grey,
-      ),
-    );
-  }
-
-  Widget _buildTypeButton(
-    BuildContext context, {
-    required TransactionType type,
-    required String label,
-    required bool isSelected,
-    required Color color,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return GestureDetector(
-      onTap: () {
-        setState(() => _selectedType = type);
-        final uid = FirebaseAuth.instance.currentUser!.uid;
-        context.read<CategoryCubit>().loadCategories(uid: uid, type: type.name);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color.withOpacity(0.2)
-              : (isDark ? const Color(0xFF1E1E1E) : Colors.white),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? color : Colors.transparent,
-            width: 2,
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              type == TransactionType.income
-                  ? Icons.arrow_downward_rounded
-                  : Icons.arrow_upward_rounded,
-              color: isSelected ? color : Colors.grey,
-              size: 20,
-            ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected
-                    ? color
-                    : (isDark ? Colors.white : Colors.black87),
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String hint,
-    required Widget prefix,
-    TextInputType? keyboardType,
-    int maxLines = 1,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      maxLines: maxLines,
-      style: TextStyle(color: isDark ? Colors.white : Colors.black),
-      decoration: InputDecoration(
-        hintText: hint,
-        prefixIcon: prefix,
-        filled: true,
-        fillColor: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.deepPurple, width: 1.5),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDatePicker(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: () async {
-        final date = await showDatePicker(
-          context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime(2000),
-          lastDate: DateTime(2100),
-        );
-        if (date != null) setState(() => _selectedDate = date);
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today_rounded, color: Colors.deepPurple),
-            const SizedBox(width: 12),
-            Text(
-              DateFormat('MMM dd, yyyy').format(_selectedDate),
-              style: TextStyle(
-                fontSize: 16,
-                color: isDark ? Colors.white : Colors.black87,
-              ),
-            ),
-            const Spacer(),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: Colors.grey,
-            ),
-          ],
-        ),
       ),
     );
   }

@@ -41,25 +41,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final themeMode = context.read<ThemeCubit>().state;
+    final themeMode = context
+        .read<ThemeCubit>()
+        .state;
     final themeStr = themeMode == ThemeMode.dark ? 'dark' : 'light';
 
     context.read<AuthCubit>().register(
-          name: _nameController.text.trim(),
-          email: _emailController.text.trim(),
-          password: _passwordController.text.trim(),
-          themeMode: themeStr,
-        );
+      name: _nameController.text.trim(),
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+      themeMode: themeStr,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isDark = Theme
+        .of(context)
+        .brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
-        backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FB),
+        backgroundColor: isDark ? const Color(0xFF121212) : const Color(
+            0xFFF7F7FB),
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -81,7 +86,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                 Future.delayed(
                   const Duration(milliseconds: 500),
-                  () {
+                      () {
                     if (!mounted) return;
                     Navigator.pushReplacement(
                       context,
@@ -120,7 +125,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     hint: 'Enter your name',
                     prefixIcon: Icons.person_outline,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
+                      if (value == null || value
+                          .trim()
+                          .isEmpty) {
                         return 'Please enter your name';
                       }
                       return null;
@@ -134,7 +141,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
+                      if (value == null || value
+                          .trim()
+                          .isEmpty) {
                         return 'Please enter your email';
                       }
                       if (!value.contains('@')) {
@@ -152,7 +161,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     obscureText: !_isPasswordVisible,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isPasswordVisible ? Icons.visibility : Icons
+                            .visibility_off,
                         color: Colors.deepPurple,
                       ),
                       onPressed: () {
@@ -180,12 +190,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     obscureText: !_isConfirmPasswordVisible,
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _isConfirmPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                        _isConfirmPasswordVisible ? Icons.visibility : Icons
+                            .visibility_off,
                         color: Colors.deepPurple,
                       ),
                       onPressed: () {
                         setState(() {
-                          _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                          _isConfirmPasswordVisible =
+                          !_isConfirmPasswordVisible;
                         });
                       },
                     ),
@@ -208,9 +220,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     },
                   ),
                   const SizedBox(height: 30),
-                ],
-              ),
-            ),
                 ],
               ),
             ),

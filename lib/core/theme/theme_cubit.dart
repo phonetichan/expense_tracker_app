@@ -4,7 +4,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/respository/user_respository.dart';
 
-@injectable
+@lazySingleton
 class ThemeCubit extends Cubit<ThemeMode> {
   final UserRepository userRepository;
   static const String _themeKey = 'theme_mode';

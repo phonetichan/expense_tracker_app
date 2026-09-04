@@ -4,7 +4,6 @@ import 'package:expense_tracker_app/presentation/transcation/widgets/transaction
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';

@@ -66,7 +66,7 @@ extension GetItInjectableX on _i174.GetIt {
     gh.lazySingleton<_i721.AuthRepository>(
       () => _i721.AuthRepository(gh<_i59.FirebaseAuth>()),
     );
-    gh.factory<_i676.ThemeCubit>(
+    gh.lazySingleton<_i676.ThemeCubit>(
       () => _i676.ThemeCubit(userRepository: gh<_i13.UserRepository>()),
     );
     gh.factory<_i365.AuthCubit>(
