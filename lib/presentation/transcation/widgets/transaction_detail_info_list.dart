@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../data/model/category_model.dart';
-import '../../../data/model/transaction_model.dart';
+import '../../../domain/transaction.dart';
 
 class TransactionDetailInfoList extends StatelessWidget {
-  final TransactionModel transaction;
+  final TransactionEntity transaction;
   final CategoryModel category;
 
   const TransactionDetailInfoList({

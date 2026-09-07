@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
 import '../../../data/model/category_model.dart';
-import '../../../data/respositories/category_repository_impl.dart';
+import '../../../data/respository/category_repository.dart';
 import 'category_state.dart';
 
 @injectable

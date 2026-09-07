@@ -1,17 +1,17 @@
-import '../../../data/model/transaction_model.dart';
+import '../../../domain/transaction.dart';
 
 abstract class TransactionState {}
 
 class TransactionInitial extends TransactionState {}
 
 class TransactionLoading extends TransactionState {
-  final List<TransactionModel> transactions;
+  final List<TransactionEntity> transactions;
 
   TransactionLoading(this.transactions);
 }
 
 class TransactionLoaded extends TransactionState {
-  final List<TransactionModel> transactions;
+  final List<TransactionEntity> transactions;
 
   TransactionLoaded(this.transactions);
 }

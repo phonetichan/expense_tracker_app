@@ -8,12 +8,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 
 import '../../data/model/transaction_model.dart';
+import '../../domain/transaction.dart';
 import '../category/cubit/category_cubit.dart';
 import 'cubit/transcation_cubit.dart';
 import 'widgets/category_dropdown_field.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  final TransactionModel? transaction;
+  final TransactionEntity? transaction;
 
   const AddTransactionScreen({super.key, this.transaction});
 

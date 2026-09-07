@@ -64,14 +64,9 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         body: BlocListener<AuthCubit, AuthState>(
           listener: (context, state) {
-            if (state is AuthError) {
-              SnackBarUtils.showError(context, state.message);
-            }
-
-            if (state is AuthAuthenticated) {
-              if (_emailController.text.isNotEmpty) {
+            state.maybeWhen(
+              success: () {
                 SnackBarUtils.showSuccess(context, 'Login successful!');
-
                 Future.delayed(
                   const Duration(milliseconds: 500),
                   () {
@@ -84,8 +79,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     );
                   },
                 );
-              }
-            }
+              },
+              error: (message) {
+                SnackBarUtils.showError(context, message);
+              },
+              orElse: () {},
+            );
           },
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),

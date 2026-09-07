@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/transaction_repository.dart';
+import '../../domain/transaction.dart';
 import '../model/transaction_model.dart';
 
 @LazySingleton(as: TransactionRepository)
@@ -20,34 +20,27 @@ class TransactionRepositoryImpl implements TransactionRepository {
     if (user == null) {
       throw Exception('User is not logged in.');
     }
-  //security
     return firestore
-        .collection('users')      // 1. Go to the "users" folder
-        .doc(user.uid)            // 2. Find the folder for THIS specific user
-        .collection('transactions'); // 3. Open the "transactions" drawer inside their folder
+        .collection('users')
+        .doc(user.uid)
+        .collection('transactions');
   }
 
   @override
-  Future<void> addTransaction(TransactionModel transaction) async {
+  Future<void> addTransaction(TransactionEntity transaction) async {
     try {
-      print('========== ADD TRANSACTION ==========');
-      print('User ID: ${auth.currentUser?.uid}');
-      print('Transaction: ${transaction.toMap()}');
-
+      final model = TransactionModel.fromEntity(transaction);
       await _transactionCollection
-          .doc(transaction.id)
-          .set(transaction.toMap());
-
-      print('========== TRANSACTION SAVED ==========');
+          .doc(model.id)
+          .set(model.toMap());
     } catch (e) {
-      print('========== TRANSACTION ERROR ==========');
-      print(e);
+      print('Error adding transaction: $e');
       rethrow;
     }
   }
 
   @override
-  Future<List<TransactionModel>> getTransactions() async {
+  Future<List<TransactionEntity>> getTransactions() async {
     final snapshot = await _transactionCollection
         .orderBy('date', descending: true)
         .get();
@@ -58,16 +51,15 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<void> updateTransaction(TransactionModel transaction) async {
-    // FIX: Use _transactionCollection to access user-specific data
+  Future<void> updateTransaction(TransactionEntity transaction) async {
+    final model = TransactionModel.fromEntity(transaction);
     await _transactionCollection
-        .doc(transaction.id)
-        .update(transaction.toMap());
+        .doc(model.id)
+        .update(model.toMap());
   }
 
   @override
   Future<void> deleteTransaction(String id) async {
-    // FIX: Use _transactionCollection to access user-specific data
     await _transactionCollection
         .doc(id)
         .delete();

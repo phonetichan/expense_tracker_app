@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/utils/category_icon_utils.dart';
 import '../../../data/model/category_model.dart';
 import '../../../data/model/transaction_model.dart';
+import '../../../domain/transaction.dart';
 import '../../category/category_form_screen.dart';
 import '../../category/cubit/category_cubit.dart';
 import '../../category/cubit/category_state.dart';

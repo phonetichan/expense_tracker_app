@@ -5,14 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 import '../../data/model/category_model.dart';
-import '../../data/model/transaction_model.dart';
+import '../../domain/transaction.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import 'add_transaction_screen.dart';
 import 'cubit/transcation_cubit.dart';
 
 class TransactionDetailScreen extends StatefulWidget {
-  final TransactionModel transaction;
+  final TransactionEntity transaction;
 
   const TransactionDetailScreen({super.key, required this.transaction});
 

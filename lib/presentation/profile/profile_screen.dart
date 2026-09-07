@@ -3,8 +3,8 @@ import 'package:expense_tracker_app/presentation/profile/widgets/profile_menu_it
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/theme_cubit.dart';
 import '../auth/cubit/auth_cubit.dart';
+import '../blocs/blocs.dart';
 import '../category/category_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -74,10 +74,14 @@ class ProfileScreen extends StatelessWidget {
             ProfileMenuItem(
               icon: Icons.dark_mode_outlined,
               title: 'Dark Mode',
-              trailing: BlocBuilder<ThemeCubit, ThemeMode>(
-                builder: (context, themeMode) {
+              trailing: BlocBuilder<ThemeCubit, ThemeState>(
+                builder: (context, state) {
+                  final isDarkMode = state.maybeWhen(
+                    loaded: (mode) => mode == ThemeMode.dark,
+                    orElse: () => false,
+                  );
                   return Switch(
-                    value: themeMode == ThemeMode.dark,
+                    value: isDarkMode,
                     onChanged: (value) {
                       if (user != null) {
                         context.read<ThemeCubit>().toggleTheme(user.uid);

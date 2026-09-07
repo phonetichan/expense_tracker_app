@@ -1,12 +1,11 @@
+import 'package:expense_tracker_app/domain/transaction.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_balance_card.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_month_filter.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_transaction_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 import '../../data/model/category_model.dart';
-import '../../data/model/transaction_model.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import '../profile/profile_screen.dart';
@@ -37,8 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  List<TransactionModel> _getMonthlyTransactions(
-    List<TransactionModel> transactions,
+  List<TransactionEntity> _getMonthlyTransactions(
+    List<TransactionEntity> transactions,
   ) {
     return transactions.where((transaction) {
       return transaction.date.year == _selectedMonth.year &&
@@ -138,7 +137,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           builder: (context, categoryState) {
             return BlocBuilder<TransactionCubit, TransactionState>(
               builder: (context, transactionState) {
-                List<TransactionModel> transactions = [];
+                List<TransactionEntity> transactions = [];
                 bool isTransactionLoading = false;
 
                 if (transactionState is TransactionLoading) {

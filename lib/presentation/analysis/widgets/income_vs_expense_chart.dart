@@ -2,9 +2,10 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../data/model/transaction_model.dart';
+import '../../../domain/transaction.dart';
 
 class IncomeVsExpenseChart extends StatelessWidget {
-  final List<TransactionModel> transactions;
+  final List<TransactionEntity> transactions;
 
   const IncomeVsExpenseChart({super.key, required this.transactions});
 

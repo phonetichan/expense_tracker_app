@@ -4,7 +4,7 @@ import 'package:expense_tracker_app/presentation/auth/widgets/auth_text_field.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:expense_tracker_app/core/theme/theme_cubit.dart';
+import '../blocs/blocs.dart';
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_cubit.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
@@ -41,9 +41,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final themeMode = context
-        .read<ThemeCubit>()
-        .state;
+    final themeMode = context.read<ThemeCubit>().state.maybeWhen(
+          loaded: (mode) => mode,
+          orElse: () => ThemeMode.light,
+        );
     final themeStr = themeMode == ThemeMode.dark ? 'dark' : 'light';
 
     context.read<AuthCubit>().register(
@@ -80,13 +81,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         body: BlocListener<AuthCubit, AuthState>(
           listener: (context, state) {
-            if (state is AuthAuthenticated) {
-              if (_emailController.text.isNotEmpty) {
+            state.maybeWhen(
+              success: () {
                 SnackBarUtils.showSuccess(context, 'Registration successful!');
-
                 Future.delayed(
                   const Duration(milliseconds: 500),
-                      () {
+                  () {
                     if (!mounted) return;
                     Navigator.pushReplacement(
                       context,
@@ -96,12 +96,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     );
                   },
                 );
-              }
-            }
-
-            if (state is AuthError) {
-              SnackBarUtils.showError(context, state.message);
-            }
+              },
+              error: (message) {
+                SnackBarUtils.showError(context, message);
+              },
+              orElse: () {},
+            );
           },
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),

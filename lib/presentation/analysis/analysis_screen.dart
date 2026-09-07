@@ -1,3 +1,4 @@
+import 'package:expense_tracker_app/domain/transaction.dart';
 import 'package:expense_tracker_app/presentation/analysis/widgets/expenses_by_category_chart.dart';
 import 'package:expense_tracker_app/presentation/analysis/widgets/income_vs_expense_chart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/model/category_model.dart';
-import '../../data/model/transaction_model.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import '../transcation/cubit/transcation_cubit.dart';
@@ -52,7 +52,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
         builder: (context, categoryState) {
           return BlocBuilder<TransactionCubit, TransactionState>(
             builder: (context, transactionState) {
-              List<TransactionModel> transactions = [];
+              List<TransactionEntity> transactions = [];
               bool isLoading = false;
 
               if (transactionState is TransactionLoading) {

@@ -1,29 +1,24 @@
 import 'package:expense_tracker_app/presentation/transcation/cubit/transcation_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../../data/model/transaction_model.dart';
-import '../../../domain/transaction_repository.dart';
+import '../../../domain/transaction.dart';
 
 @injectable
 class TransactionCubit extends Cubit<TransactionState> {
   final TransactionRepository repository;
 
-  List<TransactionModel> currentTransactions = [];
+  List<TransactionEntity> currentTransactions = [];
 
   TransactionCubit(this.repository) : super(TransactionInitial());
 
-  Future<void> addTransaction(TransactionModel transaction) async {
+  Future<void> addTransaction(TransactionEntity transaction) async {
     emit(TransactionLoading(currentTransactions));
 
     try {
       await repository.addTransaction(transaction);
       await loadTransactions();
     } catch (e) {
-      emit(
-        TransactionError(
-          'Failed to add transaction.',
-        ),
-      );
+      emit(TransactionError('Failed to add transaction.'));
     }
   }
 
@@ -32,35 +27,21 @@ class TransactionCubit extends Cubit<TransactionState> {
 
     try {
       final transactions = await repository.getTransactions();
-
       currentTransactions = transactions;
-
-      emit(
-        TransactionLoaded(currentTransactions),
-      );
+      emit(TransactionLoaded(currentTransactions));
     } catch (e) {
-      emit(
-        TransactionError(
-          'Failed to load transactions.',
-        ),
-      );
+      emit(TransactionError('Failed to load transactions.'));
     }
   }
 
-  Future<void> updateTransaction(
-    TransactionModel transaction,
-  ) async {
+  Future<void> updateTransaction(TransactionEntity transaction) async {
     emit(TransactionLoading(currentTransactions));
 
     try {
       await repository.updateTransaction(transaction);
       await loadTransactions();
     } catch (e) {
-      emit(
-        TransactionError(
-          'Failed to update transaction.',
-        ),
-      );
+      emit(TransactionError('Failed to update transaction.'));
     }
   }
 
@@ -71,11 +52,7 @@ class TransactionCubit extends Cubit<TransactionState> {
       await repository.deleteTransaction(id);
       await loadTransactions();
     } catch (e) {
-      emit(
-        TransactionError(
-          'Failed to delete transaction.',
-        ),
-      );
+      emit(TransactionError('Failed to delete transaction.'));
     }
   }
 }

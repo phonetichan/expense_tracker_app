@@ -1,21 +1,15 @@
-abstract class AuthState {}
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-class AuthInitial extends AuthState {}
+part 'auth_state.freezed.dart';
 
-class AuthLoading extends AuthState {}
-
-class AuthAuthenticated extends AuthState {
-  final String email;
-
-  AuthAuthenticated({
-    required this.email,
-  });
-}
-
-class AuthUnauthenticated extends AuthState {}
-
-class AuthError extends AuthState {
-  final String message;
-
-  AuthError(this.message);
+@freezed
+class AuthState with _$AuthState {
+  const factory AuthState.initial() = AuthInitial;
+  const factory AuthState.loading() = AuthLoading;
+  const factory AuthState.success() = AuthSuccess;
+  const factory AuthState.error(String message) = AuthError;
+  
+  // These are for session state, though AuthenticationCubit handles this now.
+  const factory AuthState.authenticated({required String email}) = AuthAuthenticated;
+  const factory AuthState.unauthenticated() = AuthUnauthenticated;
 }

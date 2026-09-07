@@ -1,10 +1,10 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import '../../../data/model/category_model.dart';
-import '../../../data/model/transaction_model.dart';
+import '../../../domain/transaction.dart';
 
 class ExpensesByCategoryChart extends StatelessWidget {
-  final List<TransactionModel> transactions;
+  final List<TransactionEntity> transactions;
   final List<CategoryModel> categories;
 
   const ExpensesByCategoryChart({

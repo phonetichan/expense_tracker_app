@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/category_icon_utils.dart';
 import '../../../data/model/category_model.dart';
-import '../../../data/model/transaction_model.dart';
+import '../../../domain/transaction.dart';
 import '../transaction_detail_screen.dart';
 
 class TransactionHistoryItem extends StatelessWidget {
-  final TransactionModel transaction;
+  final TransactionEntity transaction;
   final CategoryModel category;
 
   const TransactionHistoryItem({

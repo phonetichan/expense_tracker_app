@@ -2,12 +2,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+//Theme (Freezed version)
+import 'package:expense_tracker_app/presentation/blocs/blocs.dart';
+
 //DI & Config
 import 'package:expense_tracker_app/firebase_options.dart';
 import 'di/injector.dart';
 
 //Core & Logic
-import 'package:expense_tracker_app/core/theme/theme_cubit.dart';
 import 'package:expense_tracker_app/data/respository/auth_respository.dart';
 
 //Presentation
@@ -51,7 +53,9 @@ class MyApp extends StatelessWidget {
           create: (_) => inject<TransactionCubit>(),
         ),
         BlocProvider(create: (_) => inject<CategoryCubit>(),),
-        BlocProvider(create: (_) => inject<ThemeCubit>(),)
+        BlocProvider(
+          create: (context) => inject<ThemeCubit>(),
+        )
       ],
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {
@@ -62,8 +66,12 @@ class MyApp extends StatelessWidget {
             );
           }
         },
-        child: BlocBuilder<ThemeCubit, ThemeMode>(
-          builder: (context, themeMode) {
+        child: BlocBuilder<ThemeCubit, ThemeState>(
+          builder: (context, state) {
+            final themeMode = state.maybeWhen(
+              loaded: (mode) => mode,
+              orElse: () => ThemeMode.system,
+            );
             final user = inject<AuthRepository>().currentUser;
 
             return MaterialApp(

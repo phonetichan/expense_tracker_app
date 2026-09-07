@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../data/model/category_model.dart';
 import '../../data/model/transaction_model.dart';
+import '../../domain/transaction.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import 'cubit/transcation_cubit.dart';
@@ -135,8 +136,8 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
     super.dispose();
   }
 
-  List<TransactionModel> _filterTransactions(
-    List<TransactionModel> transactions,
+  List<TransactionEntity> _filterTransactions(
+    List<TransactionEntity> transactions,
   ) {
     return transactions.where((transaction) {
       // 1. Year Filter (Always filter by selected year)
