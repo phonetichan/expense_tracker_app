@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/category_icon_utils.dart';
-import '../../../data/model/category_model.dart';
-import '../../../domain/transaction.dart';
+import '../../../core/utils/currency_utils.dart';
+import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
 
 class TransactionDetailAmountCard extends StatelessWidget {
   final TransactionEntity transaction;
-  final CategoryModel category;
+  final CategoryEntity category;
 
   const TransactionDetailAmountCard({
     super.key,
@@ -57,7 +58,7 @@ class TransactionDetailAmountCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${isIncome ? '+ ' : '- '} Ks ${transaction.amount.toStringAsFixed(0)}',
+            CurrencyUtils.formatAmount(transaction.amount, showPrefix: true, isIncome: isIncome),
             style: TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.bold,

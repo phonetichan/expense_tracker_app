@@ -25,8 +25,8 @@ export 'category/cubit/category_cubit.dart';
 export 'category/cubit/category_state.dart';
 
 // Transaction Management
-export 'transcation/add_transaction_screen.dart';
-export 'transcation/transaction_detail_screen.dart';
-export 'transcation/transcation_history_screen.dart';
-export 'transcation/cubit/transcation_cubit.dart';
-export 'transcation/cubit/transcation_state.dart';
+export 'transaction/add_transaction_screen.dart';
+export 'transaction/transaction_detail_screen.dart';
+export 'transaction/transaction_history_screen.dart';
+export 'transaction/cubit/transaction_cubit.dart';
+export 'transaction/cubit/transaction_state.dart';

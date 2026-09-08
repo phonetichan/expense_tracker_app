@@ -1,23 +1,24 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:expense_tracker_app/data/respository/category_repository.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker_app/data/respository/auth_respository.dart';
-import 'package:expense_tracker_app/data/respository/user_respository.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
 import 'package:injectable/injectable.dart';
-import '../../../domain/user.dart';
+import '../../../domain/entities/user_entity.dart';
+import '../../../domain/repositories/auth_repository.dart';
+import '../../../domain/repositories/category_repository.dart';
+import '../../../domain/repositories/user_repository.dart';
 import '../../blocs/authentication_cubit/authentication_cubit.dart';
 
 @injectable
 class AuthCubit extends Cubit<AuthState> {
   final AuthRepository authRepository;
   final UserRepository userRepository;
+  final CategoryRepository categoryRepository;
   final AuthenticationCubit _authenticationCubit;
 
   AuthCubit({
     required this.authRepository,
     required this.userRepository,
+    required this.categoryRepository,
     required AuthenticationCubit authenticationCubit,
   }) : _authenticationCubit = authenticationCubit,
        super(const AuthState.initial());
@@ -36,15 +37,15 @@ class AuthCubit extends Cubit<AuthState> {
     required String name,
     required String email,
     required String password,
-    required String themeMode,
   }) async {
+    // Step 2: AuthCubit emits AuthState.loading() -> UI shows spinner
     emit(const AuthState.loading());
 
     try {
       print('🔵 Registration started');
       print('📧 Email: $email');
 
-      // 1. Create Firebase Auth user
+      // Step 3: AuthCubit calls AuthRepository.register() -> Firebase Success!
       final credential = await authRepository.register(
         email: email,
         password: password,
@@ -68,7 +69,6 @@ class AuthCubit extends Cubit<AuthState> {
         uid: user.uid,
         name: name,
         email: email,
-        themeMode: themeMode,
       );
 
       print('✅ User profile created successfully');
@@ -76,15 +76,12 @@ class AuthCubit extends Cubit<AuthState> {
       // 3. Create default categories
       print('🟡 Creating default categories...');
 
-      final categoryRepository = CategoryRepository(
-        firestore: FirebaseFirestore.instance,
-      );
-
       await categoryRepository.createDefaultCategories(user.uid);
 
       print('✅ Default categories created successfully');
       
-      // Handshake with AuthenticationCubit
+      // Step 4: THE HANDSHAKE -> AuthCubit calls global AuthenticationCubit
+      // Step 5: AuthenticationCubit emits AuthenticationState.authenticated(user)
       _authenticationCubit.authenticateUser(
         user: UserEntity(
           uid: user.uid,
@@ -94,6 +91,8 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       print('🎉 Registration completed successfully');
+      // Step 6: AuthCubit emits AuthState.success()
+      // Step 7: UI hears success and navigates to Dashboard
       emit(const AuthState.success());
     } on FirebaseAuthException catch (e) {
       final message = _getAuthErrorMessage(e);
@@ -104,9 +103,11 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> login({required String email, required String password}) async {
+    // Step 2: AuthCubit emits AuthState.loading() -> UI shows spinner
     emit(const AuthState.loading());
 
     try {
+      // Step 3: AuthCubit calls AuthRepository.login() -> Firebase Success!
       final credential = await authRepository.login(
         email: email,
         password: password,
@@ -117,7 +118,8 @@ class AuthCubit extends Cubit<AuthState> {
         final profile = await userRepository.getUserProfile(user.uid);
         final data = profile.data();
 
-        // Handshake with AuthenticationCubit
+        // Step 4: THE HANDSHAKE -> AuthCubit calls global AuthenticationCubit
+        // Step 5: AuthenticationCubit emits AuthenticationState.authenticated(user)
         _authenticationCubit.authenticateUser(
           user: UserEntity(
             uid: user.uid,
@@ -131,9 +133,10 @@ class AuthCubit extends Cubit<AuthState> {
         print('  uid: ${user.uid}');
         print('  name: ${data?['name']}');
         print('  email: ${user.email}');
-        print('  themeMode: ${data?['themeMode']}');
         print('---------------------------------------------');
       }
+      // Step 6: AuthCubit emits AuthState.success()
+      // Step 7: UI hears success and navigates to Dashboard
       emit(const AuthState.success());
     } on FirebaseAuthException catch (e) {
       if (e.code == 'invalid-credential' ||

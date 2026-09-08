@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../domain/transaction.dart';
+import '../../domain/entities/transaction_entity.dart';
 
 class TransactionModel extends TransactionEntity {
   TransactionModel({

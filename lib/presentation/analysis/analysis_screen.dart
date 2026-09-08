@@ -1,15 +1,16 @@
-import 'package:expense_tracker_app/domain/transaction.dart';
+import 'package:expense_tracker_app/core/utils/currency_utils.dart';
+import 'package:expense_tracker_app/domain/entities/category_entity.dart';
+import 'package:expense_tracker_app/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker_app/presentation/analysis/widgets/expenses_by_category_chart.dart';
 import 'package:expense_tracker_app/presentation/analysis/widgets/income_vs_expense_chart.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/model/category_model.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
-import '../transcation/cubit/transcation_cubit.dart';
-import '../transcation/cubit/transcation_state.dart';
+import '../transaction/cubit/transaction_cubit.dart';
+import '../transaction/cubit/transaction_state.dart';
 
 class AnalysisScreen extends StatefulWidget {
   const AnalysisScreen({super.key});
@@ -68,7 +69,7 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
                 );
               }
 
-              List<CategoryModel> categories = [];
+              List<CategoryEntity> categories = [];
               if (categoryState is CategoryLoaded) {
                 categories = categoryState.categories;
               }

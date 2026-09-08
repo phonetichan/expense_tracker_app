@@ -1,6 +1,3 @@
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_date_picker.dart';
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_text_field.dart';
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_type_selector.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,10 +5,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 
 import '../../data/model/transaction_model.dart';
-import '../../domain/transaction.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
-import 'cubit/transcation_cubit.dart';
+import 'cubit/transaction_cubit.dart';
 import 'widgets/category_dropdown_field.dart';
+import 'widgets/transaction_date_picker.dart';
+import 'widgets/transaction_text_field.dart';
+import 'widgets/transaction_type_selector.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final TransactionEntity? transaction;
@@ -76,6 +76,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       return;
     }
 
+    if (_selectedCategoryId == null) {
+      SnackBarUtils.showError(
+        context,
+        'Please select a category.',
+      );
+      return;
+    }
+
     setState(() => _isSaving = true);
 
     final transaction = TransactionModel(
@@ -135,7 +143,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           elevation: 0,
           centerTitle: true,
           title: Text(
-            isEditing ? 'Edit Transaction' : 'Add Transaction',
+            isEditing ? 'Update Transaction' : 'Add Transaction',
             style: TextStyle(
               color: isDark ? Colors.white : Colors.black,
               fontWeight: FontWeight.bold,

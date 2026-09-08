@@ -76,16 +76,11 @@ class ProfileScreen extends StatelessWidget {
               title: 'Dark Mode',
               trailing: BlocBuilder<ThemeCubit, ThemeState>(
                 builder: (context, state) {
-                  final isDarkMode = state.maybeWhen(
-                    loaded: (mode) => mode == ThemeMode.dark,
-                    orElse: () => false,
-                  );
+                  final isDarkMode = state.themeMode == ThemeMode.dark;
                   return Switch(
                     value: isDarkMode,
                     onChanged: (value) {
-                      if (user != null) {
-                        context.read<ThemeCubit>().toggleTheme(user.uid);
-                      }
+                      context.read<ThemeCubit>().toggleTheme();
                     },
                     activeColor: Colors.deepPurple,
                   );

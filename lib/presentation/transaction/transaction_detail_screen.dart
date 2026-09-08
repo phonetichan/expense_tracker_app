@@ -1,15 +1,15 @@
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_detail_amount_card.dart';
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_detail_info_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
-import '../../data/model/category_model.dart';
-import '../../domain/transaction.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import 'add_transaction_screen.dart';
-import 'cubit/transcation_cubit.dart';
+import 'cubit/transaction_cubit.dart';
+import 'widgets/transaction_detail_amount_card.dart';
+import 'widgets/transaction_detail_info_list.dart';
 
 class TransactionDetailScreen extends StatefulWidget {
   final TransactionEntity transaction;
@@ -37,14 +37,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
 
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
-        List<CategoryModel> categories = [];
+        List<CategoryEntity> categories = [];
         if (state is CategoryLoaded) {
           categories = state.categories;
         }
 
         final category = categories.firstWhere(
           (c) => c.id == widget.transaction.categoryId,
-          orElse: () => CategoryModel(
+          orElse: () => CategoryEntity(
             id: widget.transaction.categoryId ?? 'other',
             name: 'Unknown',
             icon: 'category',
@@ -107,7 +107,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
                       onPressed: () => _editTransaction(context),
                       icon: const Icon(Icons.edit, color: Colors.white),
                       label: const Text(
-                        'Edit Transaction',
+                        'Update Transaction',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,

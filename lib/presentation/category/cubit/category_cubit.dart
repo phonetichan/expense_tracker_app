@@ -1,13 +1,13 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import '../../../data/model/category_model.dart';
-import '../../../data/respository/category_repository.dart';
+import '../../../domain/entities/category_entity.dart';
+import '../../../domain/repositories/category_repository.dart';
 import 'category_state.dart';
 
 @injectable
 class CategoryCubit extends Cubit<CategoryState> {
   final CategoryRepository repository;
-  List<CategoryModel> currentCategories = [];
+  List<CategoryEntity> currentCategories = [];
 
   CategoryCubit(this.repository) : super(CategoryInitial());
 
@@ -18,16 +18,9 @@ class CategoryCubit extends Cubit<CategoryState> {
     emit(CategoryLoading(currentCategories));
 
     try {
-      final categories = await repository.getCategories(
-        uid,
-        type,
-      );
-
+      final categories = await repository.getCategories(uid, type);
       currentCategories = categories;
-
-      emit(
-        CategoryLoaded(currentCategories),
-      );
+      emit(CategoryLoaded(currentCategories));
     } catch (e) {
       emit(CategoryError(e.toString()));
     }
@@ -40,12 +33,8 @@ class CategoryCubit extends Cubit<CategoryState> {
 
     try {
       final categories = await repository.getAllCategories(uid);
-
       currentCategories = categories;
-
-      emit(
-        CategoryLoaded(currentCategories),
-      );
+      emit(CategoryLoaded(currentCategories));
     } catch (e) {
       emit(CategoryError(e.toString()));
     }
@@ -53,11 +42,10 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> addCategory({
     required String uid,
-    required CategoryModel category,
+    required CategoryEntity category,
   }) async {
     try {
       await repository.addCategory(uid, category);
-
       await loadAllCategories(uid: uid);
     } catch (e) {
       emit(CategoryError(e.toString()));
@@ -66,11 +54,10 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   Future<void> updateCategory({
     required String uid,
-    required CategoryModel category,
+    required CategoryEntity category,
   }) async {
     try {
       await repository.updateCategory(uid, category);
-
       await loadAllCategories(uid: uid);
     } catch (e) {
       emit(CategoryError(e.toString()));
@@ -80,14 +67,9 @@ class CategoryCubit extends Cubit<CategoryState> {
   Future<void> deleteCategory({
     required String uid,
     required String categoryId,
-    required String type,
   }) async {
     try {
-      await repository.deleteCategory(
-        uid,
-        categoryId,
-      );
-
+      await repository.deleteCategory(uid, categoryId);
       await loadAllCategories(uid: uid);
     } catch (e) {
       emit(CategoryError(e.toString()));

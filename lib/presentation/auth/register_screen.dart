@@ -41,17 +41,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    final themeMode = context.read<ThemeCubit>().state.maybeWhen(
-          loaded: (mode) => mode,
-          orElse: () => ThemeMode.light,
-        );
-    final themeStr = themeMode == ThemeMode.dark ? 'dark' : 'light';
-
     context.read<AuthCubit>().register(
       name: _nameController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text.trim(),
-      themeMode: themeStr,
     );
   }
 

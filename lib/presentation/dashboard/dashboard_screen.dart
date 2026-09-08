@@ -1,18 +1,21 @@
-import 'package:expense_tracker_app/domain/transaction.dart';
+import 'package:expense_tracker_app/core/utils/category_utils.dart';
+import 'package:expense_tracker_app/core/utils/currency_utils.dart';
+import 'package:expense_tracker_app/core/utils/transaction_utils.dart';
+import 'package:expense_tracker_app/domain/entities/category_entity.dart';
+import 'package:expense_tracker_app/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_balance_card.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_month_filter.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_transaction_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/model/category_model.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import '../profile/profile_screen.dart';
-import '../transcation/add_transaction_screen.dart';
-import '../transcation/cubit/transcation_cubit.dart';
-import '../transcation/cubit/transcation_state.dart';
-import '../transcation/transcation_history_screen.dart';
+import '../transaction/add_transaction_screen.dart';
+import '../transaction/cubit/transaction_cubit.dart';
+import '../transaction/cubit/transaction_state.dart';
+import '../transaction/transaction_history_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -33,58 +36,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (uid != null) {
       context.read<TransactionCubit>().loadTransactions();
       context.read<CategoryCubit>().loadAllCategories(uid: uid);
-    }
-  }
-
-  List<TransactionEntity> _getMonthlyTransactions(
-    List<TransactionEntity> transactions,
-  ) {
-    return transactions.where((transaction) {
-      return transaction.date.year == _selectedMonth.year &&
-          transaction.date.month == _selectedMonth.month;
-    }).toList();
-  }
-
-  Future<void> _showMonthPicker() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedMonth,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-
-    if (picked != null) {
-      setState(() {
-        _selectedMonth = DateTime(picked.year, picked.month);
-      });
-    }
-  }
-
-  String _formatAmount(double amount) {
-    String formatted;
-    if (amount >= 1000000) {
-      final value = amount / 1000000;
-      formatted =
-          '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 1)}M';
-    } else if (amount >= 1000) {
-      final value = amount / 1000;
-      formatted =
-          '${value.toStringAsFixed(value.truncateToDouble() == value ? 0 : 1)}K';
-    } else {
-      formatted = amount.toStringAsFixed(0);
-    }
-    return 'Ks $formatted';
-  }
-
-  CategoryModel? _findCategory(
-    List<CategoryModel> categories,
-    String? categoryId,
-  ) {
-    if (categoryId == null) return null;
-    try {
-      return categories.firstWhere((category) => category.id == categoryId);
-    } catch (_) {
-      return null;
     }
   }
 
@@ -153,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   );
                 }
 
-                List<CategoryModel> categories = [];
+                List<CategoryEntity> categories = [];
                 bool isCategoryLoading = false;
 
                 if (categoryState is CategoryLoading) {
@@ -162,8 +113,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   categories = categoryState.categories;
                 }
 
-                final monthlyTransactions = _getMonthlyTransactions(
+                final monthlyTransactions = TransactionUtils.filterByMonth(
                   transactions,
+                  _selectedMonth,
                 );
 
                 double totalIncome = 0;
@@ -201,7 +153,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           children: [
                             DashboardMonthFilter(
                               selectedMonth: _selectedMonth,
-                              onMonthPickerTap: _showMonthPicker,
+                              onMonthPickerTap: () async {
+                                final picked = await showDatePicker(
+                                  context: context,
+                                  initialDate: _selectedMonth,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime(2100),
+                                );
+
+                                if (picked != null) {
+                                  setState(() {
+                                    _selectedMonth =
+                                        DateTime(picked.year, picked.month);
+                                  });
+                                }
+                              },
                               onPreviousMonth: () {
                                 setState(() {
                                   _selectedMonth = DateTime(
@@ -224,7 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               totalBalance: totalBalance,
                               totalIncome: totalIncome,
                               totalExpense: totalExpense,
-                              formatAmount: _formatAmount,
+                              formatAmount: CurrencyUtils.formatAmount,
                             ),
                             const SizedBox(height: 30),
                             Row(
@@ -313,14 +279,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 itemBuilder: (context, index) {
                                   final transaction =
                                       monthlyTransactions[index];
-                                  final category = _findCategory(
+                                  final category = CategoryUtils.findCategoryById(
                                     categories,
                                     transaction.categoryId,
                                   );
                                   return DashboardTransactionItem(
                                     transaction: transaction,
                                     category: category,
-                                    formatAmount: _formatAmount,
+                                    formatAmount: CurrencyUtils.formatAmount,
                                   );
                                 },
                               ),
@@ -358,5 +324,4 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
-
 }

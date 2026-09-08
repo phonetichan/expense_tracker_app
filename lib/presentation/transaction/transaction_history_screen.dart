@@ -1,17 +1,19 @@
-import 'package:expense_tracker_app/presentation/transcation/widgets/month_slider.dart';
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_filter_chips.dart';
-import 'package:expense_tracker_app/presentation/transcation/widgets/transaction_history_item.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../data/model/category_model.dart';
-import '../../data/model/transaction_model.dart';
-import '../../domain/transaction.dart';
+import '../../core/utils/category_utils.dart';
+import '../../core/utils/currency_utils.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
-import 'cubit/transcation_cubit.dart';
-import 'cubit/transcation_state.dart';
+import 'cubit/transaction_cubit.dart';
+import 'cubit/transaction_state.dart';
+import 'transaction_detail_screen.dart';
+import 'widgets/month_slider.dart';
+import 'widgets/transaction_filter_chips.dart';
+import 'widgets/transaction_history_item.dart';
 
 class TransactionHistoryScreen extends StatefulWidget {
   final DateTime? selectedMonth;
@@ -187,7 +189,7 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
       ),
       body: BlocBuilder<CategoryCubit, CategoryState>(
         builder: (context, categoryState) {
-          List<CategoryModel> categories = [];
+          List<CategoryEntity> categories = [];
           if (categoryState is CategoryLoaded) {
             categories = categoryState.categories;
           }
@@ -274,15 +276,15 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                         itemCount: transactions.length,
                         itemBuilder: (context, index) {
                           final transaction = transactions[index];
-                          final category = categories.firstWhere(
-                            (c) => c.id == transaction.categoryId,
-                            orElse: () => CategoryModel(
+                          final category = CategoryUtils.findCategoryById(
+                            categories,
+                            transaction.categoryId,
+                          ) ?? CategoryEntity(
                               id: transaction.categoryId ?? 'other',
                               name: 'Unknown',
                               icon: 'category',
                               type: transaction.type.name,
-                            ),
-                          );
+                            );
                           return TransactionHistoryItem(
                             transaction: transaction,
                             category: category,

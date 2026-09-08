@@ -3,12 +3,12 @@ import 'package:expense_tracker_app/presentation/category/widgets/category_type_
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/model/category_model.dart';
+import '../../domain/entities/category_entity.dart';
 import 'cubit/category_cubit.dart';
 
 // create and edit page
 class CategoryFormScreen extends StatefulWidget {
-  final CategoryModel? category;
+  final CategoryEntity? category;
 
   const CategoryFormScreen({
     super.key,
@@ -70,7 +70,7 @@ class _CategoryFormScreenState
       _isSaving = true;
     });
 
-    final category = CategoryModel(
+    final category = CategoryEntity(
       id: widget.category?.id ?? '',
       name: name,
       icon: _selectedIcon,
@@ -134,7 +134,7 @@ class _CategoryFormScreenState
           centerTitle: true,
           title: Text(
             isEditing
-                ? 'Edit Category'
+                ? 'Update Category'
                 : 'Add Category',
             style: TextStyle(
               color: isDark

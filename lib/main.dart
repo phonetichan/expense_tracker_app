@@ -1,108 +1,101 @@
+import 'package:expense_tracker_app/di/injector.dart';
+import 'package:expense_tracker_app/firebase_options.dart';
+import 'package:expense_tracker_app/presentation/blocs/blocs.dart';
+import 'package:expense_tracker_app/presentation/presentation.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-//Theme (Freezed version)
-import 'package:expense_tracker_app/presentation/blocs/blocs.dart';
-
-//DI & Config
-import 'package:expense_tracker_app/firebase_options.dart';
-import 'di/injector.dart';
-
-//Core & Logic
-import 'package:expense_tracker_app/data/respository/auth_respository.dart';
-
-//Presentation
-import 'package:expense_tracker_app/presentation/presentation.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // 1. Initialize Dependency Injection (Builds the pantry)
+  // 1. Initialize Dependency Injection
   await configureDependencies();
 
-  // 2. Grabs tools from DI instead of manual creation
-  final themeCubit = inject<ThemeCubit>();
-  await themeCubit.loadLocalTheme();
-
-  final authRepo = inject<AuthRepository>();
-  if (authRepo.currentUser != null) {
-    themeCubit.syncWithFirestore(authRepo.currentUser!.uid);
-  }
+  // 2. Load initial data (Theme and Auth status)
+  await inject<AuthenticationCubit>().loadData();
 
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({
-    super.key
-  });
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) => inject<AuthCubit>()..checkAuthStatus(),
-        ),
-        BlocProvider(
-          create: (_) => inject<TransactionCubit>(),
-        ),
-        BlocProvider(create: (_) => inject<CategoryCubit>(),),
-        BlocProvider(
-          create: (context) => inject<ThemeCubit>(),
-        )
+        BlocProvider(create: (_) => inject<AuthenticationCubit>()),
+        BlocProvider(create: (_) => inject<AuthCubit>()..checkAuthStatus()),
+        BlocProvider(create: (_) => inject<TransactionCubit>()),
+        BlocProvider(create: (_) => inject<CategoryCubit>()),
+        BlocProvider(create: (_) => inject<ThemeCubit>()),
       ],
-      child: BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is AuthUnauthenticated) {
-            navigatorKey.currentState?.pushNamedAndRemoveUntil(
-              '/login',
-              (route) => false,
-            );
-          }
-        },
-        child: BlocBuilder<ThemeCubit, ThemeState>(
-          builder: (context, state) {
-            final themeMode = state.maybeWhen(
-              loaded: (mode) => mode,
-              orElse: () => ThemeMode.system,
-            );
-            final user = inject<AuthRepository>().currentUser;
+      child: const AppView(),
+    );
+  }
+}
 
-            return MaterialApp(
-              navigatorKey: navigatorKey,
-              debugShowCheckedModeBanner: false,
-              title: 'Expense Tracker',
-              theme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.deepPurple,
-                  brightness: Brightness.light,
-                ),
-                useMaterial3: true,
-              ),
-              darkTheme: ThemeData(
-                colorScheme: ColorScheme.fromSeed(
-                  seedColor: Colors.deepPurple,
-                  brightness: Brightness.dark,
-                ),
-                useMaterial3: true,
-              ),
-              themeMode: themeMode,
-              // Determine initial screen based on login status
-              home: user != null ? const MainScreen() : const LoginScreen(),
-              routes: {
-                '/login': (context) => const LoginScreen(),
-                '/main': (context) => const MainScreen(),
+class AppView extends StatelessWidget {
+  const AppView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    //rebuild in the user's preferred theme (Dark or Light) even
+    // after they kill and restart the app.
+    return BlocBuilder<ThemeCubit, ThemeState>(
+      builder: (context, themeState) {
+        final themeMode = themeState.themeMode;
+
+        // work logout for register and login
+        return BlocListener<AuthenticationCubit, AuthenticationState>(
+          listener: (context, state) {
+            state.maybeWhen(
+              unauthenticated: () {
+                navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
               },
+              orElse: () {},
             );
           },
-        ),
+          child: BlocBuilder<AuthenticationCubit, AuthenticationState>(
+            builder: (context, authState) {
+              return MaterialApp(
+                navigatorKey: navigatorKey,
+                debugShowCheckedModeBanner: false,
+                title: 'Expense Tracker',
+                theme: _buildTheme(Brightness.light),
+                darkTheme: _buildTheme(Brightness.dark),
+                themeMode: themeMode,
+                // The "Switchboard": Decides the entry screen based on global session
+                home: authState.maybeWhen(
+                  authenticated: (_) => const MainScreen(),
+                  orElse: () => const LoginScreen(),
+                ),
+                routes: {
+                  '/login': (_) => const LoginScreen(),
+                  '/main': (_) => const MainScreen(),
+                },
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  ThemeData _buildTheme(Brightness brightness) {
+    return ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.deepPurple,
+        brightness: brightness,
       ),
+      useMaterial3: true,
     );
   }
 }

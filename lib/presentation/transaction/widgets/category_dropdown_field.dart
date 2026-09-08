@@ -2,9 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/utils/category_icon_utils.dart';
-import '../../../data/model/category_model.dart';
-import '../../../data/model/transaction_model.dart';
-import '../../../domain/transaction.dart';
+import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
 import '../../category/category_form_screen.dart';
 import '../../category/cubit/category_cubit.dart';
 import '../../category/cubit/category_state.dart';
@@ -118,7 +117,7 @@ class CategoryDropdownField extends StatelessWidget {
                 ],
                 onChanged: (value) async {
                   if (value == addCategoryValue) {
-                    final newCategory = await Navigator.push<CategoryModel>(
+                    final newCategory = await Navigator.push<CategoryEntity>(
                       context,
                       MaterialPageRoute(
                         builder: (_) => const CategoryFormScreen(),
@@ -234,7 +233,7 @@ class CategoryDropdownField extends StatelessWidget {
           ],
           onChanged: (value) async {
             if (value == addCategoryValue) {
-              final newCategory = await Navigator.push<CategoryModel>(
+              final newCategory = await Navigator.push<CategoryEntity>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => const CategoryFormScreen(),

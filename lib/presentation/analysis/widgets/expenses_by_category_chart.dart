@@ -1,11 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import '../../../data/model/category_model.dart';
-import '../../../domain/transaction.dart';
+import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
 
 class ExpensesByCategoryChart extends StatelessWidget {
   final List<TransactionEntity> transactions;
-  final List<CategoryModel> categories;
+  final List<CategoryEntity> categories;
 
   const ExpensesByCategoryChart({
     super.key,
@@ -110,7 +110,7 @@ class ExpensesByCategoryChart extends StatelessWidget {
                     final color = colors[index % colors.length];
                     final category = categories.firstWhere(
                       (c) => c.id == entry.key,
-                      orElse: () => CategoryModel(
+                      orElse: () => CategoryEntity(
                         id: entry.key,
                         name: 'Unknown',
                         icon: 'category',

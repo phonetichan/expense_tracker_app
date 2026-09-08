@@ -2,18 +2,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:injectable/injectable.dart';
 
 import '../../core/constants/default_categories.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/repositories/category_repository.dart';
 import '../model/category_model.dart';
 
-@lazySingleton
-class CategoryRepository {
+@LazySingleton(as: CategoryRepository)
+class CategoryRepositoryImpl implements CategoryRepository {
   final FirebaseFirestore firestore;
 
-  CategoryRepository({required this.firestore});
+  CategoryRepositoryImpl({required this.firestore});
 
+  @override
   Future<void> createDefaultCategories(String uid) async {
     try {
-      print('Starting category creation for UID: $uid');
-
       final categoriesRef = firestore
           .collection('users')
           .doc(uid)
@@ -22,32 +23,18 @@ class CategoryRepository {
       final batch = firestore.batch();
 
       for (final category in DefaultCategories.categories) {
-        print(
-          'Adding category: ${category.id} '
-          '(${category.name}) '
-          '[${category.type}]',
-        );
-
         final docRef = categoriesRef.doc(category.id);
-
         batch.set(docRef, category.toMap());
       }
 
-      print('Committing ${DefaultCategories.categories.length} categories...');
-
       await batch.commit();
-
-      print('Firestore category batch committed successfully');
-    } catch (e, stackTrace) {
-      print('Failed to create default categories');
-      print('Error: $e');
-      print('StackTrace: $stackTrace');
-
+    } catch (e) {
       rethrow;
     }
   }
 
-  Future<List<CategoryModel>> getCategories(String uid, String type) async {
+  @override
+  Future<List<CategoryEntity>> getCategories(String uid, String type) async {
     final snapshot = await firestore
         .collection('users')
         .doc(uid)
@@ -56,11 +43,12 @@ class CategoryRepository {
         .get();
 
     return snapshot.docs
-        .map((doc) => CategoryModel.fromMap(doc.id, doc.data()))
+        .map<CategoryEntity>((doc) => CategoryModel.fromMap(doc.id, doc.data()))
         .toList();
   }
 
-  Future<List<CategoryModel>> getAllCategories(String uid) async {
+  @override
+  Future<List<CategoryEntity>> getAllCategories(String uid) async {
     final snapshot = await firestore
         .collection('users')
         .doc(uid)
@@ -68,27 +56,32 @@ class CategoryRepository {
         .get();
 
     return snapshot.docs
-        .map((doc) => CategoryModel.fromMap(doc.id, doc.data()))
+        .map<CategoryEntity>((doc) => CategoryModel.fromMap(doc.id, doc.data()))
         .toList();
   }
 
-  Future<void> addCategory(String uid, CategoryModel category) async {
+  @override
+  Future<void> addCategory(String uid, CategoryEntity category) async {
+    final model = CategoryModel.fromEntity(category);
     await firestore
         .collection('users')
         .doc(uid)
         .collection('categories')
-        .add(category.toMap());
+        .add(model.toMap());
   }
 
-  Future<void> updateCategory(String uid, CategoryModel category) async {
+  @override
+  Future<void> updateCategory(String uid, CategoryEntity category) async {
+    final model = CategoryModel.fromEntity(category);
     await firestore
         .collection('users')
         .doc(uid)
         .collection('categories')
-        .doc(category.id)
-        .update(category.toMap());
+        .doc(model.id)
+        .update(model.toMap());
   }
 
+  @override
   Future<void> deleteCategory(String uid, String categoryId) async {
     await firestore
         .collection('users')

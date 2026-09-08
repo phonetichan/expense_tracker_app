@@ -2,7 +2,7 @@ import 'package:expense_tracker_app/presentation/category/widgets/category_list_
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../data/model/category_model.dart';
+import '../../domain/entities/category_entity.dart';
 import 'category_form_screen.dart';
 import 'cubit/category_cubit.dart';
 import 'cubit/category_state.dart';
@@ -75,7 +75,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
       body: BlocBuilder<CategoryCubit, CategoryState>(
         builder: (context, state) {
-          List<CategoryModel> categories = [];
+          List<CategoryEntity> categories = [];
           bool isLoading = false;
 
           if (state is CategoryLoading) {
@@ -190,7 +190,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   Future<void> _editCategory(
-      CategoryModel category,
+      CategoryEntity category,
       ) async {
     await Navigator.push(
       context,
@@ -214,7 +214,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   Future<void> _deleteCategory(
-      CategoryModel category,
+      CategoryEntity category,
       ) async {
     final shouldDelete = await showDialog<bool>(
       context: context,
@@ -262,7 +262,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
       await context.read<CategoryCubit>().deleteCategory(
             uid: uid,
             categoryId: category.id,
-            type: category.type,
           );
     }
   }

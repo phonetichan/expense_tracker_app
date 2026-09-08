@@ -1,4 +1,4 @@
-import '../../../domain/transaction.dart';
+import '../../../domain/entities/transaction_entity.dart';
 
 abstract class TransactionState {}
 

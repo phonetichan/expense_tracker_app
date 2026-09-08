@@ -1,7 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:injectable/injectable.dart';
-import '../../domain/transaction.dart';
+import '../../domain/entities/transaction_entity.dart';
+import '../../domain/repositories/transaction_repository.dart';
 import '../model/transaction_model.dart';
 
 @LazySingleton(as: TransactionRepository)
@@ -46,7 +47,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
         .get();
 
     return snapshot.docs
-        .map((doc) => TransactionModel.fromMap(doc.data()))
+        .map<TransactionEntity>((doc) => TransactionModel.fromMap(doc.data()))
         .toList();
   }
 

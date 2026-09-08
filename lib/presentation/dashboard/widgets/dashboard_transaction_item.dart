@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/category_icon_utils.dart';
-import '../../../data/model/category_model.dart';
-import '../../../data/model/transaction_model.dart';
-import '../../../domain/transaction.dart';
-import '../../transcation/transaction_detail_screen.dart';
+import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
+import '../../transaction/transaction_detail_screen.dart';
 
 class DashboardTransactionItem extends StatelessWidget {
   final TransactionEntity transaction;
-  final CategoryModel? category;
+  final CategoryEntity? category;
   final String Function(double) formatAmount;
 
   const DashboardTransactionItem({

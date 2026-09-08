@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/utils/category_icon_utils.dart';
-import '../../../data/model/category_model.dart';
-import '../../../domain/transaction.dart';
+import '../../../core/utils/currency_utils.dart';
+import '../../../domain/entities/category_entity.dart';
+import '../../../domain/entities/transaction_entity.dart';
 import '../transaction_detail_screen.dart';
 
 class TransactionHistoryItem extends StatelessWidget {
   final TransactionEntity transaction;
-  final CategoryModel category;
+  final CategoryEntity category;
 
   const TransactionHistoryItem({
     super.key,
@@ -70,7 +71,7 @@ class TransactionHistoryItem extends StatelessWidget {
           style: const TextStyle(color: Colors.grey, fontSize: 12),
         ),
         trailing: Text(
-          '${isIncome ? '+ ' : '- '} Ks ${transaction.amount.toStringAsFixed(0)}',
+          CurrencyUtils.formatAmount(transaction.amount, showPrefix: true, isIncome: isIncome),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 15,

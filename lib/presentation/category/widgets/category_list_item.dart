@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../../core/utils/category_icon_utils.dart';
-import '../../../data/model/category_model.dart';
+import '../../../domain/entities/category_entity.dart';
 
 class CategoryListItem extends StatelessWidget {
-  final CategoryModel category;
+  final CategoryEntity category;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -78,7 +78,7 @@ class CategoryListItem extends StatelessWidget {
                 children: [
                   Icon(Icons.edit_outlined),
                   SizedBox(width: 10),
-                  Text('Edit'),
+                  Text('Update'),
                 ],
               ),
             ),
