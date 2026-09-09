@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/category_icon_utils.dart';
-import '../../../core/utils/currency_utils.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/transaction_entity.dart';
+import '../../utils/category_icon_utils.dart';
+import '../../utils/currency_utils.dart';
 
 class TransactionDetailAmountCard extends StatelessWidget {
   final TransactionEntity transaction;

@@ -211,8 +211,8 @@ return $default(_that.themeMode);case _:
 /// @nodoc
 
 
-class _ThemeState implements ThemeState {
-  const _ThemeState({this.themeMode = ThemeMode.system});
+class _ThemeState extends ThemeState {
+  const _ThemeState({this.themeMode = ThemeMode.system}): super._();
   
 
 @override@JsonKey() final  ThemeMode themeMode;

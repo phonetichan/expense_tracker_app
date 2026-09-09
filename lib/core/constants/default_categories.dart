@@ -1,4 +1,4 @@
-import '../../data/model/category_model.dart';
+import '../../data/model/category/category_model.dart';
 
 class DefaultCategories {
   static final List<CategoryModel> categories = [

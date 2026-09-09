@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/category_icon_utils.dart';
 import '../../../domain/entities/category_entity.dart';
+import '../../utils/category_icon_utils.dart';
 
 class CategoryListItem extends StatelessWidget {
   final CategoryEntity category;

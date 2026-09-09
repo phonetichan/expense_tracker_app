@@ -12,6 +12,11 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   TransactionCubit(this.repository) : super(TransactionInitial());
 
+  void clear() {
+    currentTransactions = [];
+    emit(TransactionInitial());
+  }
+
   Future<void> addTransaction(TransactionEntity transaction) async {
     emit(TransactionLoading(currentTransactions));
 

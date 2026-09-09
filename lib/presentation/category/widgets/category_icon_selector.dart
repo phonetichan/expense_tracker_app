@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/utils/category_icon_utils.dart';
+import '../../utils/category_icon_utils.dart';
 
 class CategoryIconSelector extends StatelessWidget {
   final String selectedIcon;

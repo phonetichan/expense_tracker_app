@@ -4,7 +4,7 @@ import 'package:injectable/injectable.dart';
 import '../../core/constants/default_categories.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/repositories/category_repository.dart';
-import '../model/category_model.dart';
+import '../model/category/category_model.dart';
 
 @LazySingleton(as: CategoryRepository)
 class CategoryRepositoryImpl implements CategoryRepository {

@@ -4,12 +4,17 @@ import '../../../domain/entities/category_entity.dart';
 import '../../../domain/repositories/category_repository.dart';
 import 'category_state.dart';
 
-@injectable
+@singleton
 class CategoryCubit extends Cubit<CategoryState> {
   final CategoryRepository repository;
   List<CategoryEntity> currentCategories = [];
 
   CategoryCubit(this.repository) : super(CategoryInitial());
+
+  void clear() {
+    currentCategories = [];
+    emit(CategoryInitial());
+  }
 
   Future<void> loadCategories({
     required String uid,

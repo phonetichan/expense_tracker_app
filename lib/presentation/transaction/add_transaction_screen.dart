@@ -2,11 +2,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
-
-import '../../data/model/transaction_model.dart';
+import '../../data/model/transaction/transaction_model.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
+import '../utils/snackbar_utils.dart';
 import 'cubit/transaction_cubit.dart';
 import 'widgets/category_dropdown_field.dart';
 import 'widgets/transaction_date_picker.dart';

@@ -1,6 +1,3 @@
-import 'package:expense_tracker_app/core/utils/category_utils.dart';
-import 'package:expense_tracker_app/core/utils/currency_utils.dart';
-import 'package:expense_tracker_app/core/utils/transaction_utils.dart';
 import 'package:expense_tracker_app/domain/entities/category_entity.dart';
 import 'package:expense_tracker_app/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_balance_card.dart';
@@ -16,6 +13,9 @@ import '../transaction/add_transaction_screen.dart';
 import '../transaction/cubit/transaction_cubit.dart';
 import '../transaction/cubit/transaction_state.dart';
 import '../transaction/transaction_history_screen.dart';
+import '../utils/category_utils.dart';
+import '../utils/currency_utils.dart';
+import '../utils/transaction_utils.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -43,6 +45,7 @@ class ThemeCubit extends Cubit<ThemeState> {
       await prefs.setString(_themeKey, themeStr);
     } catch (e) {
       // Log error if needed
+      print('Failed to save theme: $e');
     }
   }
 }

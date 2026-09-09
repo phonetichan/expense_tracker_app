@@ -14,10 +14,6 @@ void main() async {
 
   // 1. Initialize Dependency Injection
   await configureDependencies();
-
-  // 2. Load initial data (Theme and Auth status)
-  await inject<AuthenticationCubit>().loadData();
-
   runApp(const MyApp());
 }
 
@@ -29,7 +25,7 @@ class MyApp extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => inject<AuthenticationCubit>()),
-        BlocProvider(create: (_) => inject<AuthCubit>()..checkAuthStatus()),
+        BlocProvider(create: (_) => inject<AuthCubit>()),
         BlocProvider(create: (_) => inject<TransactionCubit>()),
         BlocProvider(create: (_) => inject<CategoryCubit>()),
         BlocProvider(create: (_) => inject<ThemeCubit>()),
@@ -54,7 +50,17 @@ class AppView extends StatelessWidget {
         return BlocListener<AuthenticationCubit, AuthenticationState>(
           listener: (context, state) {
             state.maybeWhen(
+              authenticated: (_) {
+                context.read<TransactionCubit>().clear();
+                context.read<CategoryCubit>().clear();
+                navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                  '/main',
+                  (route) => false,
+                );
+              },
               unauthenticated: () {
+                context.read<TransactionCubit>().clear();
+                context.read<CategoryCubit>().clear();
                 navigatorKey.currentState?.pushNamedAndRemoveUntil(
                   '/login',
                   (route) => false,

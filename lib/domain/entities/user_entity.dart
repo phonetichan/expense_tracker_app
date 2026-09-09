@@ -3,7 +3,7 @@ class UserEntity {
   final String name;
   final String email;
 
-  UserEntity({
+  const UserEntity({
     required this.uid,
     required this.name,
     required this.email,

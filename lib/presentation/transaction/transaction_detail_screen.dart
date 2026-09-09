@@ -1,11 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
+import '../utils/snackbar_utils.dart';
 import 'add_transaction_screen.dart';
 import 'cubit/transaction_cubit.dart';
 import 'widgets/transaction_detail_amount_card.dart';

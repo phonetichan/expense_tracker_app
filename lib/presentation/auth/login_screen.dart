@@ -4,11 +4,12 @@ import 'package:expense_tracker_app/presentation/auth/widgets/auth_text_field.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:expense_tracker_app/core/utils/snackbar_utils.dart';
 import 'package:expense_tracker_app/presentation/main/main_screen.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_cubit.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
 import 'package:expense_tracker_app/presentation/auth/register_screen.dart';
+
+import '../utils/snackbar_utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
