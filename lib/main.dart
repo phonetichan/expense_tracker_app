@@ -2,6 +2,7 @@ import 'package:expense_tracker_app/di/injector.dart';
 import 'package:expense_tracker_app/firebase_options.dart';
 import 'package:expense_tracker_app/presentation/blocs/blocs.dart';
 import 'package:expense_tracker_app/presentation/presentation.dart';
+import 'package:expense_tracker_app/router/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -53,40 +54,28 @@ class AppView extends StatelessWidget {
               authenticated: (_) {
                 context.read<TransactionCubit>().clear();
                 context.read<CategoryCubit>().clear();
-                navigatorKey.currentState?.pushNamedAndRemoveUntil(
-                  '/main',
-                  (route) => false,
-                );
+                // Navigate to main screen using GoRouter
+                appRouter.go('/main');
               },
               unauthenticated: () {
                 context.read<TransactionCubit>().clear();
                 context.read<CategoryCubit>().clear();
-                navigatorKey.currentState?.pushNamedAndRemoveUntil(
-                  '/login',
-                  (route) => false,
-                );
+
+                // Navigate to login screen using GoRouter
+                appRouter.go('/login');
               },
               orElse: () {},
             );
           },
           child: BlocBuilder<AuthenticationCubit, AuthenticationState>(
             builder: (context, authState) {
-              return MaterialApp(
-                navigatorKey: navigatorKey,
+              return MaterialApp.router(
                 debugShowCheckedModeBanner: false,
                 title: 'Expense Tracker',
                 theme: _buildTheme(Brightness.light),
                 darkTheme: _buildTheme(Brightness.dark),
                 themeMode: themeMode,
-                // The "Switchboard": Decides the entry screen based on global session
-                home: authState.maybeWhen(
-                  authenticated: (_) => const MainScreen(),
-                  orElse: () => const LoginScreen(),
-                ),
-                routes: {
-                  '/login': (_) => const LoginScreen(),
-                  '/main': (_) => const MainScreen(),
-                },
+                routerConfig: appRouter,
               );
             },
           ),
