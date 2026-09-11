@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/category_entity.dart';
+import '../../router/app_router.dart';
 import 'category_form_screen.dart';
 import 'cubit/category_cubit.dart';
 import 'cubit/category_state.dart';
@@ -52,12 +53,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
         onPressed: () async {
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => CategoryFormScreen(),
-            ),
-          );
+          await appRouter.push('/category-form');
 
           if (!mounted) return;
 
@@ -192,14 +188,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   Future<void> _editCategory(
       CategoryEntity category,
       ) async {
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => CategoryFormScreen(
-          category: category,
-        ),
-      ),
-    );
+    await appRouter.push('/category-form', extra: category);
 
     if (!mounted) return;
 

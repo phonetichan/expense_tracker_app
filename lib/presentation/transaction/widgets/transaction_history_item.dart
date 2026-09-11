@@ -5,6 +5,7 @@ import '../../../domain/entities/transaction_entity.dart';
 import '../../utils/category_icon_utils.dart';
 import '../../utils/currency_utils.dart';
 import '../transaction_detail_screen.dart';
+import '../../../router/app_router.dart';
 
 class TransactionHistoryItem extends StatelessWidget {
   final TransactionEntity transaction;
@@ -36,12 +37,7 @@ class TransactionHistoryItem extends StatelessWidget {
       ),
       child: ListTile(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => TransactionDetailScreen(transaction: transaction),
-            ),
-          );
+          appRouter.push('/transaction-detail', extra: transaction);
         },
         contentPadding: const EdgeInsets.all(12),
         leading: Container(

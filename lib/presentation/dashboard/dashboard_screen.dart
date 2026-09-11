@@ -6,13 +6,11 @@ import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_tra
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../router/app_router.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
-import '../profile/profile_screen.dart';
-import '../transaction/add_transaction_screen.dart';
 import '../transaction/cubit/transaction_cubit.dart';
 import '../transaction/cubit/transaction_state.dart';
-import '../transaction/transaction_history_screen.dart';
 import '../utils/category_utils.dart';
 import '../utils/currency_utils.dart';
 import '../utils/transaction_utils.dart';
@@ -62,10 +60,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         actions: [
           IconButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfileScreen()),
-              );
+              appRouter.go('/main');
             },
             icon: Icon(
               Icons.person_outline,
@@ -209,14 +204,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 InkWell(
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => TransactionHistoryScreen(
-                                          selectedMonth: _selectedMonth,
-                                        ),
-                                      ),
-                                    );
+                                    appRouter.go('/transaction-history', extra: _selectedMonth);
                                   },
                                   borderRadius: BorderRadius.circular(12),
                                   child: Container(
@@ -314,10 +302,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddTransactionScreen()),
-          );
+          appRouter.go('/add-transaction');
         },
         backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.add, color: Colors.white),

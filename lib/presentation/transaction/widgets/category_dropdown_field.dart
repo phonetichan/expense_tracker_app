@@ -7,6 +7,7 @@ import '../../category/category_form_screen.dart';
 import '../../category/cubit/category_cubit.dart';
 import '../../category/cubit/category_state.dart';
 import '../../utils/category_icon_utils.dart';
+import '../../../router/app_router.dart';
 
 class CategoryDropdownField extends StatelessWidget {
   final TransactionType selectedType;
@@ -117,12 +118,7 @@ class CategoryDropdownField extends StatelessWidget {
                 ],
                 onChanged: (value) async {
                   if (value == addCategoryValue) {
-                    final newCategory = await Navigator.push<CategoryEntity>(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CategoryFormScreen(),
-                      ),
-                    );
+                    final newCategory = await appRouter.push('/category-form');
 
                     if (!context.mounted) return;
 
@@ -134,7 +130,7 @@ class CategoryDropdownField extends StatelessWidget {
                           );
                     }
 
-                    if (newCategory != null) {
+                    if (newCategory is CategoryEntity) {
                       onCategoryChanged(newCategory.id);
                     }
                     return;
@@ -233,12 +229,7 @@ class CategoryDropdownField extends StatelessWidget {
           ],
           onChanged: (value) async {
             if (value == addCategoryValue) {
-              final newCategory = await Navigator.push<CategoryEntity>(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const CategoryFormScreen(),
-                ),
-              );
+              final newCategory = await appRouter.push('/category-form');
 
               if (!context.mounted) return;
 
@@ -250,7 +241,7 @@ class CategoryDropdownField extends StatelessWidget {
                     );
               }
 
-              if (newCategory != null) {
+              if (newCategory is CategoryEntity) {
                 onCategoryChanged(newCategory.id);
               }
             }

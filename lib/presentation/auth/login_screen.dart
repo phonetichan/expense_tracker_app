@@ -4,11 +4,10 @@ import 'package:expense_tracker_app/presentation/auth/widgets/auth_text_field.da
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:expense_tracker_app/presentation/main/main_screen.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_cubit.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
-import 'package:expense_tracker_app/presentation/auth/register_screen.dart';
 
+import '../../router/app_router.dart';
 import '../utils/snackbar_utils.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -72,12 +71,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const Duration(milliseconds: 500),
                   () {
                     if (!mounted) return;
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const MainScreen(),
-                      ),
-                    );
+                    appRouter.go('/main');
                   },
                 );
               },
@@ -157,12 +151,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Center(
                     child: TextButton(
                       onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const RegisterScreen(),
-                          ),
-                        );
+                        appRouter.go('/register');
                       },
                       child: RichText(
                         text: TextSpan(
