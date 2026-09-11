@@ -7,6 +7,7 @@ import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
 import '../utils/snackbar_utils.dart';
 import 'add_transaction_screen.dart';
+import '../../router/app_router.dart';
 import 'cubit/transaction_cubit.dart';
 import 'widgets/transaction_detail_amount_card.dart';
 import 'widgets/transaction_detail_info_list.dart';
@@ -131,12 +132,7 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
   }
 
   void _editTransaction(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => AddTransactionScreen(transaction: widget.transaction),
-      ),
-    ).then((_) {
+    appRouter.push('/add-transaction', extra: widget.transaction).then((_) {
       if (context.mounted) Navigator.pop(context);
     });
   }

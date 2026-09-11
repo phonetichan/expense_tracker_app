@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../auth/cubit/auth_cubit.dart';
 import '../blocs/blocs.dart';
 import '../category/category_screen.dart';
+import '../../router/app_router.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -91,12 +92,7 @@ class ProfileScreen extends StatelessWidget {
               icon: Icons.category_outlined,
               title: 'Categories',
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const CategoryScreen(),
-                  ),
-                );
+                appRouter.push('/category-screen');
               },
             ),
             ProfileMenuItem(
