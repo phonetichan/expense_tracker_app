@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../data/model/transaction/transaction_model.dart';
 import '../../domain/entities/transaction_entity.dart';
@@ -107,21 +108,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       }
 
       if (!mounted) return;
+      
+      // Navigate first, then show success (prevents Snackbar from blocking nav)
+      context.pop();
+      
       SnackBarUtils.showSuccess(
         context,
         widget.transaction == null
             ? 'Transaction added successfully.'
             : 'Transaction updated successfully.',
       );
-      Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
       SnackBarUtils.showError(
         context,
-        widget.transaction == null
-            ? 'Failed to add transaction.'
-            : 'Failed to update transaction.',
+        'Failed to save transaction: ${e.toString()}',
       );
     }
   }

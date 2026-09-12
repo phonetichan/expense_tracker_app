@@ -3,8 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/category_entity.dart';
-import '../../router/app_router.dart';
-import 'category_form_screen.dart';
+import '../navigation/app_router.dart';
 import 'cubit/category_cubit.dart';
 import 'cubit/category_state.dart';
 

@@ -45,6 +45,8 @@ import 'package:expense_tracker_app/presentation/blocs/theme_cubit/theme_cubit.d
     as _i1042;
 import 'package:expense_tracker_app/presentation/category/cubit/category_cubit.dart'
     as _i975;
+import 'package:expense_tracker_app/presentation/navigation/app_router.dart'
+    as _i88;
 import 'package:expense_tracker_app/presentation/transaction/cubit/transaction_cubit.dart'
     as _i978;
 import 'package:firebase_auth/firebase_auth.dart' as _i59;
@@ -107,6 +109,9 @@ extension GetItInjectableX on _i174.GetIt {
         gh<_i965.CategoryRepository>(),
         gh<_i40.AuthenticationCubit>(),
       ),
+    );
+    gh.lazySingleton<_i88.AppRouter>(
+      () => _i88.AppRouter(gh<_i40.AuthenticationCubit>()),
     );
     return this;
   }

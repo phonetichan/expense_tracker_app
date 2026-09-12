@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../auth/cubit/auth_cubit.dart';
 import '../blocs/blocs.dart';
 import '../category/category_screen.dart';
-import '../../router/app_router.dart';
+import '../navigation/app_router.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});

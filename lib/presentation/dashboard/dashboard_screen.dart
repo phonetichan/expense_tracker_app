@@ -6,9 +6,9 @@ import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_tra
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../router/app_router.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
+import '../navigation/app_router.dart';
 import '../transaction/cubit/transaction_cubit.dart';
 import '../transaction/cubit/transaction_state.dart';
 import '../utils/category_utils.dart';
@@ -57,17 +57,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: isDark ? Colors.white : Colors.black,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              appRouter.go('/main');
-            },
-            icon: Icon(
-              Icons.person_outline,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
+        actions: const [],
       ),
       body: MultiBlocListener(
         listeners: [
@@ -302,7 +292,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          appRouter.go('/add-transaction');
+          appRouter.push('/add-transaction');
         },
         backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.add, color: Colors.white),

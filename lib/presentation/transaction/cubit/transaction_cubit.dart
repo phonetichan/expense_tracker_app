@@ -18,36 +18,43 @@ class TransactionCubit extends Cubit<TransactionState> {
   }
 
   Future<void> addTransaction(TransactionEntity transaction) async {
-    emit(TransactionLoading(currentTransactions));
-
     try {
+      // 1. Save to Database first
       await repository.addTransaction(transaction);
-      await loadTransactions();
+      
+      // 2. Only if DB success, update local memory and emit loaded
+      currentTransactions = [transaction, ...currentTransactions];
+      emit(TransactionLoaded(List.from(currentTransactions)));
     } catch (e) {
-      emit(TransactionError('Failed to add transaction.'));
+      emit(TransactionError('Database Error: ${e.toString()}'));
+      rethrow;
     }
   }
 
   Future<void> loadTransactions() async {
     emit(TransactionLoading(currentTransactions));
-
     try {
       final transactions = await repository.getTransactions();
       currentTransactions = transactions;
-      emit(TransactionLoaded(currentTransactions));
+      emit(TransactionLoaded(List.from(currentTransactions)));
     } catch (e) {
       emit(TransactionError('Failed to load transactions.'));
+      rethrow;
     }
   }
 
   Future<void> updateTransaction(TransactionEntity transaction) async {
-    emit(TransactionLoading(currentTransactions));
-
     try {
       await repository.updateTransaction(transaction);
-      await loadTransactions();
+      
+      final index = currentTransactions.indexWhere((t) => t.id == transaction.id);
+      if (index != -1) {
+        currentTransactions[index] = transaction;
+      }
+      emit(TransactionLoaded(List.from(currentTransactions)));
     } catch (e) {
-      emit(TransactionError('Failed to update transaction.'));
+      emit(TransactionError('Database Error: ${e.toString()}'));
+      rethrow;
     }
   }
 

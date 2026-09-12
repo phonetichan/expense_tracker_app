@@ -1,17 +1,30 @@
 import 'package:expense_tracker_app/di/injector.dart';
 import 'package:expense_tracker_app/firebase_options.dart';
 import 'package:expense_tracker_app/presentation/blocs/blocs.dart';
+import 'package:expense_tracker_app/presentation/navigation/app_router.dart';
 import 'package:expense_tracker_app/presentation/presentation.dart';
-import 'package:expense_tracker_app/router/app_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:flutter/services.dart';
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Xiaomi/MIUI ဖုန်းတွေအတွက် အောက်ခြေဘားကို ပျောက်စေမယ့် Code
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.transparent, // Transparent ဖြစ်စေဖို့
+      systemNavigationBarDividerColor: Colors.transparent, // ဘားနဲ့ App ကြားက မျဉ်းကို ဖျောက်ဖို့
+      systemNavigationBarIconBrightness: Brightness.dark, // Button icon တွေကို မြင်ရအောင်လုပ်ဖို့
+      statusBarColor: Colors.transparent,
+    ),
+  );
+
+  // MIUI မှာ Edge-to-Edge ကို အတင်းအကျပ် (Enforce) လုပ်ခိုင်းခြင်း
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
   // 1. Initialize Dependency Injection
   await configureDependencies();
@@ -47,38 +60,14 @@ class AppView extends StatelessWidget {
       builder: (context, themeState) {
         final themeMode = themeState.themeMode;
 
-        // work logout for register and login
-        return BlocListener<AuthenticationCubit, AuthenticationState>(
-          listener: (context, state) {
-            state.maybeWhen(
-              authenticated: (_) {
-                context.read<TransactionCubit>().clear();
-                context.read<CategoryCubit>().clear();
-                // Navigate to main screen using GoRouter
-                appRouter.go('/main');
-              },
-              unauthenticated: () {
-                context.read<TransactionCubit>().clear();
-                context.read<CategoryCubit>().clear();
-
-                // Navigate to login screen using GoRouter
-                appRouter.go('/login');
-              },
-              orElse: () {},
-            );
-          },
-          child: BlocBuilder<AuthenticationCubit, AuthenticationState>(
-            builder: (context, authState) {
-              return MaterialApp.router(
-                debugShowCheckedModeBanner: false,
-                title: 'Expense Tracker',
-                theme: _buildTheme(Brightness.light),
-                darkTheme: _buildTheme(Brightness.dark),
-                themeMode: themeMode,
-                routerConfig: appRouter,
-              );
-            },
-          ),
+        // Pass the configuration cleanly down to MaterialApp.router
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: 'Expense Tracker',
+          theme: _buildTheme(Brightness.light),
+          darkTheme: _buildTheme(Brightness.dark),
+          themeMode: themeMode,
+          routerConfig: inject<AppRouter>().router,
         );
       },
     );
