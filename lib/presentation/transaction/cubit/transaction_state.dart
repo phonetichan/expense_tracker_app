@@ -1,23 +1,27 @@
 import '../../../domain/entities/transaction_entity.dart';
 
-abstract class TransactionState {}
+abstract class TransactionState {
+  const TransactionState();
+}
 
-class TransactionInitial extends TransactionState {}
+class TransactionInitial extends TransactionState {
+  const TransactionInitial();
+}
 
 class TransactionLoading extends TransactionState {
   final List<TransactionEntity> transactions;
 
-  TransactionLoading(this.transactions);
+  const TransactionLoading(this.transactions);
 }
 
 class TransactionLoaded extends TransactionState {
   final List<TransactionEntity> transactions;
 
-  TransactionLoaded(this.transactions);
+  const TransactionLoaded(this.transactions);
 }
 
 class TransactionError extends TransactionState {
   final String message;
 
-  TransactionError(this.message);
+  const TransactionError(this.message);
 }

@@ -1,6 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:injectable/injectable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'dart:async';
+
+import 'package:flutter/material.dart';
 
 import '../../di/injector.dart';
 import '../../domain/entities/category_entity.dart';
@@ -8,78 +12,111 @@ import '../../domain/entities/transaction_entity.dart';
 import '../blocs/authentication_cubit/authentication_cubit.dart';
 import '../presentation.dart';
 
-@lazySingleton
-class AppRouter {
-  final AuthenticationCubit _authCubit;
-  late final GoRouter router;
+// Helper class to convert any Stream into a Listenable for GoRouter
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
 
-  AppRouter(this._authCubit) {
-    router = GoRouter(
-      initialLocation: '/main',
-      redirect: (context, state) {
-        final authState = _authCubit.state;
-        final isGoingToLogin = state.uri.path == '/login';
-        final isGoingToRegister = state.uri.path == '/register';
-
-        // User login ဝင်ထားရင် Login/Register page သွားရင် Dashboard ကို ပြန်ပို့
-        if (authState is AuthenticationAuthenticated) {
-          return (isGoingToLogin || isGoingToRegister) ? '/main' : null;
-        }
-
-        // User login မဝင်ထားရင် Login/Register မဟုတ်တဲ့ page သွားရင် Login ကို ပို့
-        if (authState is AuthenticationUnauthenticated) {
-          return (isGoingToLogin || isGoingToRegister) ? null : '/login';
-        }
-
-        return null;
-      },
-      routes: [
-        GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-        GoRoute(
-          path: '/register',
-          builder: (context, state) => const RegisterScreen(),
-        ),
-        GoRoute(path: '/main', builder: (context, state) => const MainScreen()),
-        GoRoute(
-          path: '/transaction-history',
-          builder: (context, state) {
-            final selectedMonth = state.extra as DateTime?;
-            return TransactionHistoryScreen(selectedMonth: selectedMonth);
-          },
-        ),
-        GoRoute(
-          path: '/add-transaction',
-          builder: (context, state) {
-            final transaction = state.extra as TransactionEntity?;
-            return AddTransactionScreen(transaction: transaction);
-          },
-        ),
-        GoRoute(
-          path: '/transaction-detail',
-          builder: (context, state) {
-            final transaction = state.extra as TransactionEntity;
-            return TransactionDetailScreen(transaction: transaction);
-          },
-        ),
-        GoRoute(
-          path: '/category-screen',
-          builder: (context, state) => const CategoryScreen(),
-        ),
-        GoRoute(
-          path: '/category-form',
-          builder: (context, state) {
-            final category = state.extra as CategoryEntity?;
-            return CategoryFormScreen(category: category);
-          },
-        ),
-        GoRoute(
-          path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
-        ),
-      ],
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
     );
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
   }
 }
 
-// Global alias for compatibility
-GoRouter get appRouter => inject<AppRouter>().router;
+final appRouter = GoRouter(
+  initialLocation: '/main',
+  refreshListenable: GoRouterRefreshStream(
+    inject<AuthenticationCubit>().stream,
+  ),
+  redirect: (context, state) {
+    final authState = context.read<AuthenticationCubit>().state;
+
+    if (authState is AuthenticationInitial) {
+      return null;
+    }
+
+    final isAuthenticated = authState is AuthenticationAuthenticated;
+    final isGoingToLogin = state.uri.path == '/login';
+    final isGoingToRegister = state.uri.path == '/register';
+
+    if (!isAuthenticated && !isGoingToLogin && !isGoingToRegister) {
+      return '/login';
+    }
+
+    if (isAuthenticated && (isGoingToLogin || isGoingToRegister)) {
+      return '/main';
+    }
+
+    return null;
+  },
+  routes: [
+    GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/main',
+      builder: (context, state) {
+        final uid = FirebaseAuth.instance.currentUser!.uid;
+
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) =>
+              inject<TransactionCubit>()..loadTransactions(),
+            ),
+            BlocProvider(
+              create: (context) =>
+              inject<CategoryCubit>()..loadAllCategories(uid: uid),
+            ),
+          ],
+          child: const MainScreen(),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/transaction-history',
+      builder: (context, state) {
+        final selectedMonth = state.extra as DateTime?;
+        return TransactionHistoryScreen(selectedMonth: selectedMonth);
+      },
+    ),
+    GoRoute(
+      path: '/add-transaction',
+      builder: (context, state) {
+        final transaction = state.extra as TransactionEntity?;
+        return AddTransactionScreen(transaction: transaction);
+      },
+    ),
+    GoRoute(
+      path: '/transaction-detail',
+      builder: (context, state) {
+        final transaction = state.extra as TransactionEntity;
+        return TransactionDetailScreen(transaction: transaction);
+      },
+    ),
+    GoRoute(
+      path: '/category-screen',
+      builder: (context, state) => const CategoryScreen(),
+    ),
+    GoRoute(
+      path: '/category-form',
+      builder: (context, state) {
+        final category = state.extra as CategoryEntity?;
+        return CategoryFormScreen(category: category);
+      },
+    ),
+    GoRoute(
+      path: '/profile',
+      builder: (context, state) => const ProfileScreen(),
+    ),
+  ],
+);

@@ -110,7 +110,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       if (!mounted) return;
       
       // Navigate first, then show success (prevents Snackbar from blocking nav)
-      context.pop();
+      context.pop(true);
       
       SnackBarUtils.showSuccess(
         context,

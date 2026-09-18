@@ -12,19 +12,31 @@ class CategoryIconSelector extends StatelessWidget {
   });
 
   static const List<String> icons = [
-    'category',
     'restaurant',
     'directions_car',
-    'shopping_cart',
+    'shopping_bag',
     'home',
+    'receipt',
     'movie',
+    'health_and_safety',
     'school',
-    'medical_services',
-    'fitness_center',
-    'payments',
-    'work',
     'flight',
+    'person',
     'pets',
+    'work',
+    'fitness_center',
+    'local_cafe',
+    'build',
+    'checkroom',
+    'sports_esports',
+    'inventory_2',
+    'payments',
+    'computer',
+    'business',
+    'trending_up',
+    'card_giftcard',
+    'savings',
+    'category',
   ];
 
   @override

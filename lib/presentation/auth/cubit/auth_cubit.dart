@@ -44,9 +44,9 @@ class AuthCubit extends Cubit<AuthState> {
       );
 
       await _categoryRepository.createDefaultCategories(user.uid);
-      
-      inject<TransactionCubit>().clear();
-      inject<CategoryCubit>().clear();
+      //
+      // inject<TransactionCubit>().clear();
+      // inject<CategoryCubit>().clear();
 
       _authenticationCubit.authenticateUser(user: user);
       emit(const AuthState.success());
@@ -76,8 +76,8 @@ class AuthCubit extends Cubit<AuthState> {
         email: user.email,
       );
 
-      inject<TransactionCubit>().clear();
-      inject<CategoryCubit>().clear();
+      // inject<TransactionCubit>().clear();
+      // inject<CategoryCubit>().clear();
 
       _authenticationCubit.authenticateUser(user: authenticatedUser);
       emit(const AuthState.success());
@@ -90,7 +90,7 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthState.loading());
     try {
       await _authRepository.logout();
-      _authenticationCubit.logOut();
+      // _authenticationCubit.logOut();
       emit(const AuthUnauthenticated());
     } catch (e) {
       emit(AuthState.error(e.toString()));
