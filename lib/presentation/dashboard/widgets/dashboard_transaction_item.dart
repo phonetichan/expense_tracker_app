@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/transaction_entity.dart';
-import '../../../router/app_router.dart';
+import '../../navigation/app_router.dart';
 import '../../transaction/transaction_detail_screen.dart';
 import '../../utils/category_icon_utils.dart';
 
@@ -10,12 +10,14 @@ class DashboardTransactionItem extends StatelessWidget {
   final TransactionEntity transaction;
   final CategoryEntity? category;
   final String Function(double) formatAmount;
+  final VoidCallback onTap; // ဒီ line ထည့်ပါ
 
   const DashboardTransactionItem({
     super.key,
     required this.transaction,
     this.category,
     required this.formatAmount,
+    required this.onTap, // ဒီနေရာမှာပါ ထည့်ပေးပါ
   });
 
   @override
@@ -26,10 +28,8 @@ class DashboardTransactionItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        onTap: () {
-          appRouter.push('/transaction-detail', extra: transaction);
-        },
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(

@@ -6,8 +6,8 @@ import '../../../domain/entities/transaction_entity.dart';
 import '../../category/category_form_screen.dart';
 import '../../category/cubit/category_cubit.dart';
 import '../../category/cubit/category_state.dart';
+import '../../navigation/app_router.dart';
 import '../../utils/category_icon_utils.dart';
-import '../../../router/app_router.dart';
 
 class CategoryDropdownField extends StatelessWidget {
   final TransactionType selectedType;

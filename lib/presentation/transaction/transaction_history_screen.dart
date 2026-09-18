@@ -255,12 +255,18 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
                       return Center(child: Text(state.message));
                     }
                     if (state is TransactionLoaded ||
-                        state is TransactionLoading) {
-                      final transactions = _filterTransactions(
-                        state is TransactionLoaded
-                            ? state.transactions
-                            : (state as TransactionLoading).transactions,
-                      );
+                        state is TransactionLoading ||
+                        state is TransactionInitial) {
+                      
+                      // Safely get transactions based on state type
+                      List<TransactionEntity> currentTransactions = [];
+                      if (state is TransactionLoaded) {
+                        currentTransactions = state.transactions;
+                      } else if (state is TransactionLoading) {
+                        currentTransactions = state.transactions;
+                      }
+
+                      final transactions = _filterTransactions(currentTransactions);
                       if (transactions.isEmpty) {
                         return const Center(
                           child: Text(

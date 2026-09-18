@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
+
 import '../../../domain/entities/transaction_entity.dart';
 import '../../../domain/repositories/transaction_repository.dart';
 import 'transaction_state.dart';
@@ -12,53 +13,69 @@ class TransactionCubit extends Cubit<TransactionState> {
 
   TransactionCubit(this.repository) : super(TransactionInitial());
 
-  void clear() {
-    currentTransactions = [];
-    emit(TransactionInitial());
-  }
+  // void clear() {
+  //   currentTransactions = [];
+  //   emit(const TransactionLoaded([]));
+  // }
 
   Future<void> addTransaction(TransactionEntity transaction) async {
-    emit(TransactionLoading(currentTransactions));
-
     try {
       await repository.addTransaction(transaction);
-      await loadTransactions();
+
+      currentTransactions = [transaction, ...currentTransactions];
+
+      emit(TransactionLoaded(List.from(currentTransactions)));
     } catch (e) {
-      emit(TransactionError('Failed to add transaction.'));
+      emit(TransactionError('Database Error: ${e.toString()}'));
+      rethrow;
     }
   }
 
   Future<void> loadTransactions() async {
-    emit(TransactionLoading(currentTransactions));
 
     try {
       final transactions = await repository.getTransactions();
+      if (isClosed) return;
       currentTransactions = transactions;
-      emit(TransactionLoaded(currentTransactions));
+
+      emit(TransactionLoaded(List.from(currentTransactions)));
     } catch (e) {
       emit(TransactionError('Failed to load transactions.'));
+      rethrow;
     }
   }
 
   Future<void> updateTransaction(TransactionEntity transaction) async {
-    emit(TransactionLoading(currentTransactions));
-
     try {
       await repository.updateTransaction(transaction);
-      await loadTransactions();
+
+      final index = currentTransactions.indexWhere(
+        (t) => t.id == transaction.id,
+      );
+
+      if (index != -1) {
+        currentTransactions[index] = transaction;
+      }
+
+      emit(TransactionLoaded(List.from(currentTransactions)));
     } catch (e) {
-      emit(TransactionError('Failed to update transaction.'));
+      emit(TransactionError('Database Error: ${e.toString()}'));
+      rethrow;
     }
   }
 
-  Future<void> deleteTransaction(String id) async {
-    emit(TransactionLoading(currentTransactions));
-
+  Future<bool> deleteTransaction(String id) async {
     try {
       await repository.deleteTransaction(id);
-      await loadTransactions();
+
+      // Keep internal list synchronized
+      currentTransactions.removeWhere((transaction) => transaction.id == id);
+
+      emit(TransactionLoaded(List.from(currentTransactions)));
+      return true;
     } catch (e) {
       emit(TransactionError('Failed to delete transaction.'));
+      return false;
     }
   }
 }

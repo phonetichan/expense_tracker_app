@@ -1,46 +1,87 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../domain/entities/category_entity.dart';
-import '../domain/entities/transaction_entity.dart';
-import '../presentation/blocs/authentication_cubit/authentication_cubit.dart';
-import '../presentation/presentation.dart';
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+
+import '../../di/injector.dart';
+import '../../domain/entities/category_entity.dart';
+import '../../domain/entities/transaction_entity.dart';
+import '../blocs/authentication_cubit/authentication_cubit.dart';
+import '../presentation.dart';
+
+// Helper class to convert any Stream into a Listenable for GoRouter
+class GoRouterRefreshStream extends ChangeNotifier {
+  late final StreamSubscription<dynamic> _subscription;
+
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+      (dynamic _) => notifyListeners(),
+    );
+  }
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
 
 final appRouter = GoRouter(
   initialLocation: '/main',
-
-  // Global Session Guards (Session Management)
+  refreshListenable: GoRouterRefreshStream(
+    inject<AuthenticationCubit>().stream,
+  ),
   redirect: (context, state) {
     final authState = context.read<AuthenticationCubit>().state;
+
+    if (authState is AuthenticationInitial) {
+      return null;
+    }
+
     final isAuthenticated = authState is AuthenticationAuthenticated;
     final isGoingToLogin = state.uri.path == '/login';
     final isGoingToRegister = state.uri.path == '/register';
 
-    // Guard: Force unauthenticated sessions out to the login screen
     if (!isAuthenticated && !isGoingToLogin && !isGoingToRegister) {
       return '/login';
     }
+
+    if (isAuthenticated && (isGoingToLogin || isGoingToRegister)) {
+      return '/main';
+    }
+
     return null;
   },
-
   routes: [
-    // --- AUTHENTICATION ENTRIES ---
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
-
-    // --- APPLICATION ROOT SHELL ENTRY ---
     GoRoute(
       path: '/main',
-      builder: (context, state) => const MainScreen(),
-    ),
+      builder: (context, state) {
+        final uid = FirebaseAuth.instance.currentUser!.uid;
 
-    // --- TRANSACTION CRUD MANAGEMENT ENTRIES ---
+        return MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) =>
+              inject<TransactionCubit>()..loadTransactions(),
+            ),
+            BlocProvider(
+              create: (context) =>
+              inject<CategoryCubit>()..loadAllCategories(uid: uid),
+            ),
+          ],
+          child: const MainScreen(),
+        );
+      },
+    ),
     GoRoute(
       path: '/transaction-history',
       builder: (context, state) {
@@ -51,7 +92,6 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/add-transaction',
       builder: (context, state) {
-        // Safe check for updates: if updating, a TransactionEntity is present, otherwise null.
         final transaction = state.extra as TransactionEntity?;
         return AddTransactionScreen(transaction: transaction);
       },
@@ -63,8 +103,6 @@ final appRouter = GoRouter(
         return TransactionDetailScreen(transaction: transaction);
       },
     ),
-
-    // --- CATEGORY CRUD MANAGEMENT ENTRIES ---
     GoRoute(
       path: '/category-screen',
       builder: (context, state) => const CategoryScreen(),
@@ -72,13 +110,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/category-form',
       builder: (context, state) {
-        // Safe check for updates: if updating, a CategoryEntity is present, otherwise null.
         final category = state.extra as CategoryEntity?;
         return CategoryFormScreen(category: category);
       },
     ),
-
-    // --- SYSTEM OPTIONS ---
     GoRoute(
       path: '/profile',
       builder: (context, state) => const ProfileScreen(),

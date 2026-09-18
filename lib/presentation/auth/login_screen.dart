@@ -7,7 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_cubit.dart';
 import 'package:expense_tracker_app/presentation/auth/cubit/auth_state.dart';
 
-import '../../router/app_router.dart';
+import '../navigation/app_router.dart';
 import '../utils/snackbar_utils.dart';
 
 class LoginScreen extends StatefulWidget {

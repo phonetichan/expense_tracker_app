@@ -1,3 +1,4 @@
+import 'package:expense_tracker_app/di/di.dart';
 import 'package:expense_tracker_app/domain/entities/category_entity.dart';
 import 'package:expense_tracker_app/domain/entities/transaction_entity.dart';
 import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_balance_card.dart';
@@ -6,9 +7,9 @@ import 'package:expense_tracker_app/presentation/dashboard/widgets/dashboard_tra
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../router/app_router.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
+import '../navigation/app_router.dart';
 import '../transaction/cubit/transaction_cubit.dart';
 import '../transaction/cubit/transaction_state.dart';
 import '../utils/category_utils.dart';
@@ -24,17 +25,13 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   DateTime _selectedMonth = DateTime.now();
+  late String uid;
 
   @override
   void initState() {
     super.initState();
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-
-    if (uid != null) {
-      context.read<TransactionCubit>().loadTransactions();
-      context.read<CategoryCubit>().loadAllCategories(uid: uid);
-    }
+    uid = FirebaseAuth.instance.currentUser!.uid;
   }
 
   @override
@@ -57,17 +54,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             color: isDark ? Colors.white : Colors.black,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              appRouter.go('/main');
-            },
-            icon: Icon(
-              Icons.person_outline,
-              color: isDark ? Colors.white : Colors.black,
-            ),
-          ),
-        ],
+        actions: const [],
       ),
       body: MultiBlocListener(
         listeners: [
@@ -204,7 +191,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                 ),
                                 InkWell(
                                   onTap: () {
-                                    appRouter.go('/transaction-history', extra: _selectedMonth);
+                                    appRouter.push('/transaction-history', extra: _selectedMonth);
                                   },
                                   borderRadius: BorderRadius.circular(12),
                                   child: Container(
@@ -275,6 +262,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                     transaction: transaction,
                                     category: category,
                                     formatAmount: CurrencyUtils.formatAmount,
+                                    onTap: () async{
+                                      // ၁။ Detail screen ကို push လုပ်ပြီး result ကို await လုပ်ပါ
+                                      final result = await appRouter.push('/transaction-detail', extra: transaction);
+
+                                      // ၂။ အကယ်၍ Edit သို့မဟုတ် Delete လုပ်ခဲ့ရင် (result == true ဖြစ်ခဲ့ရင်)
+                                      // Data တွေကို refresh လုပ်ခိုင်းပါ
+                                      if (result == true && mounted) {
+                                        context.read<TransactionCubit>().loadTransactions();
+                                        context.read<CategoryCubit>().loadAllCategories(uid: uid);
+                                      }
+                                    }
                                   );
                                 },
                               ),
@@ -301,8 +299,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          appRouter.go('/add-transaction');
+        onPressed: () async {
+          final result = await appRouter.push('/add-transaction');
+
+          if (result == true && mounted) {
+            context.read<TransactionCubit>().loadTransactions();
+            context.read<CategoryCubit>().loadAllCategories(uid: uid);
+          }
         },
         backgroundColor: Colors.deepPurple,
         child: const Icon(Icons.add, color: Colors.white),

@@ -1,13 +1,14 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
+import '../navigation/app_router.dart';
 import '../utils/snackbar_utils.dart';
 import 'add_transaction_screen.dart';
-import '../../router/app_router.dart';
 import 'cubit/transaction_cubit.dart';
 import 'widgets/transaction_detail_amount_card.dart';
 import 'widgets/transaction_detail_info_list.dart';
@@ -18,7 +19,8 @@ class TransactionDetailScreen extends StatefulWidget {
   const TransactionDetailScreen({super.key, required this.transaction});
 
   @override
-  State<TransactionDetailScreen> createState() => _TransactionDetailScreenState();
+  State<TransactionDetailScreen> createState() =>
+      _TransactionDetailScreenState();
 }
 
 class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
@@ -54,7 +56,9 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         );
 
         return Scaffold(
-          backgroundColor: isDark ? const Color(0xFF121212) : const Color(0xFFF7F7FB),
+          backgroundColor: isDark
+              ? const Color(0xFF121212)
+              : const Color(0xFFF7F7FB),
           appBar: AppBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -131,10 +135,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     );
   }
 
-  void _editTransaction(BuildContext context) {
-    appRouter.push('/add-transaction', extra: widget.transaction).then((_) {
-      if (context.mounted) Navigator.pop(context);
-    });
+  void _editTransaction(BuildContext context) async{
+    final result = await appRouter.push('/add-transaction', extra: widget.transaction);
+
+    // ၂။ အကယ်၍ update အောင်မြင်ခဲ့ရင် (result == true)
+    // Dashboard ဆီကို result: true ပြန်ပေးပြီး ဒီ screen ကိုပါ ပိတ်ခိုင်းပါ
+    if (context.mounted && result == true) {
+      Navigator.pop(context, true);
+    }
   }
 
   void _showDeleteConfirmation(BuildContext context) {
@@ -152,16 +160,17 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(dialogContext);
-              Navigator.pop(context);
+              Navigator.pop(dialogContext); // close confirmation dialog
 
               await context.read<TransactionCubit>().deleteTransaction(
-                    widget.transaction.id,
-                  );
+                widget.transaction.id,
+              );
 
-              if (context.mounted) {
-                SnackBarUtils.showSuccess(context, 'Transaction deleted');
-              }
+              if (!context.mounted) return;
+
+              Navigator.pop(context, true); // return success to previous screen
+              
+              SnackBarUtils.showError(context, 'Transaction deleted successfully');
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),
