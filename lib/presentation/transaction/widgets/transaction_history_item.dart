@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../domain/entities/category_entity.dart';
 import '../../../domain/entities/transaction_entity.dart';
-import '../../navigation/app_router.dart';
+import 'package:go_router/go_router.dart';
 import '../../utils/category_icon_utils.dart';
 import '../../utils/currency_utils.dart';
 
@@ -36,7 +36,7 @@ class TransactionHistoryItem extends StatelessWidget {
       ),
       child: ListTile(
         onTap: () {
-          appRouter.push('/transaction-detail', extra: transaction);
+          context.push('/transaction-detail', extra: transaction);
         },
         contentPadding: const EdgeInsets.all(12),
         leading: Container(

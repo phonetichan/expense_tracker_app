@@ -1,8 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/entities/transaction_entity.dart';
-import '../../category/cubit/category_cubit.dart';
 
 class TransactionTypeSelector extends StatelessWidget {
   final TransactionType selectedType;
@@ -52,8 +49,6 @@ class TransactionTypeSelector extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         onTypeChanged(type);
-        final uid = FirebaseAuth.instance.currentUser!.uid;
-        context.read<CategoryCubit>().loadCategories(uid: uid, type: type.name);
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),

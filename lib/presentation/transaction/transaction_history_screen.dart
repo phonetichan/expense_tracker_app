@@ -45,12 +45,6 @@ class _TransactionHistoryScreenState extends State<TransactionHistoryScreen> {
 
     _generateMonths();
 
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      context.read<TransactionCubit>().loadTransactions();
-      context.read<CategoryCubit>().loadAllCategories(uid: uid);
-    }
-
     _searchController.addListener(() {
       setState(() {
         _searchQuery = _searchController.text.toLowerCase();

@@ -62,61 +62,73 @@ final appRouter = GoRouter(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
     ),
-    GoRoute(
-      path: '/main',
-      builder: (context, state) {
-        final uid = FirebaseAuth.instance.currentUser!.uid;
+
+    // ShellRoute wraps /main and all child feature routes with common BlocProviders
+    ShellRoute(
+      builder: (context, state, child) {
+        final uid = FirebaseAuth.instance.currentUser?.uid;
 
         return MultiBlocProvider(
           providers: [
             BlocProvider(
               create: (context) =>
-              inject<TransactionCubit>()..loadTransactions(),
+                  inject<TransactionCubit>()..loadTransactions(),
             ),
             BlocProvider(
               create: (context) =>
-              inject<CategoryCubit>()..loadAllCategories(uid: uid),
+                  inject<CategoryCubit>()..loadAllCategories(uid: uid ?? ''),
             ),
           ],
-          child: const MainScreen(),
+          child: child,
         );
       },
-    ),
-    GoRoute(
-      path: '/transaction-history',
-      builder: (context, state) {
-        final selectedMonth = state.extra as DateTime?;
-        return TransactionHistoryScreen(selectedMonth: selectedMonth);
-      },
-    ),
-    GoRoute(
-      path: '/add-transaction',
-      builder: (context, state) {
-        final transaction = state.extra as TransactionEntity?;
-        return AddTransactionScreen(transaction: transaction);
-      },
-    ),
-    GoRoute(
-      path: '/transaction-detail',
-      builder: (context, state) {
-        final transaction = state.extra as TransactionEntity;
-        return TransactionDetailScreen(transaction: transaction);
-      },
-    ),
-    GoRoute(
-      path: '/category-screen',
-      builder: (context, state) => const CategoryScreen(),
-    ),
-    GoRoute(
-      path: '/category-form',
-      builder: (context, state) {
-        final category = state.extra as CategoryEntity?;
-        return CategoryFormScreen(category: category);
-      },
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfileScreen(),
+      routes: [
+        GoRoute(path: '/main', builder: (context, state) => const MainScreen()),
+        GoRoute(
+          path: '/transaction-history',
+          builder: (context, state) {
+            final selectedMonth = state.extra as DateTime?;
+            return TransactionHistoryScreen(selectedMonth: selectedMonth);
+          },
+        ),
+        GoRoute(
+          path: '/transaction-detail',
+          builder: (context, state) {
+            final transaction = state.extra as TransactionEntity?;
+
+            if (transaction == null) {
+              return const Scaffold(
+                body: Center(child: Text('Transaction details not found.')),
+              );
+            }
+
+            return TransactionDetailScreen(transaction: transaction);
+          },
+        ),
+
+        GoRoute(
+          path: '/add-transaction',
+          builder: (context, state) {
+            final transaction = state.extra as TransactionEntity?;
+            return AddTransactionScreen(transaction: transaction);
+          },
+        ),
+        GoRoute(
+          path: '/category-screen',
+          builder: (context, state) => const CategoryScreen(),
+        ),
+        GoRoute(
+          path: '/category-form',
+          builder: (context, state) {
+            final category = state.extra as CategoryEntity?;
+            return CategoryFormScreen(category: category);
+          },
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (context, state) => const ProfileScreen(),
+        ),
+      ],
     ),
   ],
 );

@@ -1,42 +1,24 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../domain/entities/category_entity.dart';
 import '../../domain/entities/transaction_entity.dart';
 import '../category/cubit/category_cubit.dart';
 import '../category/cubit/category_state.dart';
-import '../navigation/app_router.dart';
 import '../utils/snackbar_utils.dart';
-import 'add_transaction_screen.dart';
 import 'cubit/transaction_cubit.dart';
 import 'widgets/transaction_detail_amount_card.dart';
 import 'widgets/transaction_detail_info_list.dart';
 
-class TransactionDetailScreen extends StatefulWidget {
+class TransactionDetailScreen extends StatelessWidget {
   final TransactionEntity transaction;
 
   const TransactionDetailScreen({super.key, required this.transaction});
 
   @override
-  State<TransactionDetailScreen> createState() =>
-      _TransactionDetailScreenState();
-}
-
-class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
-  @override
-  void initState() {
-    super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      context.read<CategoryCubit>().loadAllCategories(uid: uid);
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final isIncome = widget.transaction.type == TransactionType.income;
 
     return BlocBuilder<CategoryCubit, CategoryState>(
       builder: (context, state) {
@@ -45,13 +27,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
           categories = state.categories;
         }
 
+        // Find matching category or fallback to 'Unknown'
         final category = categories.firstWhere(
-          (c) => c.id == widget.transaction.categoryId,
+          (c) => c.id == transaction.categoryId,
           orElse: () => CategoryEntity(
-            id: widget.transaction.categoryId ?? 'other',
+            id: transaction.categoryId ?? 'other',
             name: 'Unknown',
             icon: 'category',
-            type: widget.transaction.type.name,
+            type: transaction.type.name,
           ),
         );
 
@@ -83,14 +66,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
               children: [
                 // Hero Amount Card
                 TransactionDetailAmountCard(
-                  transaction: widget.transaction,
+                  transaction: transaction,
                   category: category,
                 ),
                 const SizedBox(height: 30),
 
                 // Details List
                 TransactionDetailInfoList(
-                  transaction: widget.transaction,
+                  transaction: transaction,
                   category: category,
                 ),
 
@@ -135,13 +118,14 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
     );
   }
 
-  void _editTransaction(BuildContext context) async{
-    final result = await appRouter.push('/add-transaction', extra: widget.transaction);
+  void _editTransaction(BuildContext context) async {
+    final result = await context.push<bool>(
+      '/add-transaction',
+      extra: transaction,
+    );
 
-    // ၂။ အကယ်၍ update အောင်မြင်ခဲ့ရင် (result == true)
-    // Dashboard ဆီကို result: true ပြန်ပေးပြီး ဒီ screen ကိုပါ ပိတ်ခိုင်းပါ
     if (context.mounted && result == true) {
-      Navigator.pop(context, true);
+      context.pop(true);
     }
   }
 
@@ -155,22 +139,24 @@ class _TransactionDetailScreenState extends State<TransactionDetailScreen> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
+            onPressed: () => context.pop(),
             child: const Text('Cancel'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(dialogContext); // close confirmation dialog
+              context.pop(); // Close dialog
 
               await context.read<TransactionCubit>().deleteTransaction(
-                widget.transaction.id,
+                transaction.id,
               );
 
               if (!context.mounted) return;
 
-              Navigator.pop(context, true); // return success to previous screen
-              
-              SnackBarUtils.showError(context, 'Transaction deleted successfully');
+              SnackBarUtils.showSuccess(
+                context,
+                'Transaction deleted successfully',
+              );
+              context.pop(true);
             },
             child: const Text('Delete', style: TextStyle(color: Colors.red)),
           ),

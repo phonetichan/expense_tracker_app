@@ -37,7 +37,9 @@ class CategoryDropdownField extends StatelessWidget {
         }
 
         if (state is CategoryLoaded) {
-          final categories = state.categories;
+          final categories = state.categories
+              .where((c) => c.type == selectedType.name)
+              .toList();
 
           if (categories.isEmpty) {
             return _buildEmptyContainer(isDark, context, addCategoryValue);
@@ -124,10 +126,7 @@ class CategoryDropdownField extends StatelessWidget {
 
                     final uid = FirebaseAuth.instance.currentUser?.uid;
                     if (uid != null) {
-                      await context.read<CategoryCubit>().loadCategories(
-                            uid: uid,
-                            type: selectedType.name,
-                          );
+                      await context.read<CategoryCubit>().loadAllCategories(uid: uid);
                     }
 
                     if (newCategory is CategoryEntity) {
@@ -235,10 +234,7 @@ class CategoryDropdownField extends StatelessWidget {
 
               final uid = FirebaseAuth.instance.currentUser?.uid;
               if (uid != null) {
-                await context.read<CategoryCubit>().loadCategories(
-                      uid: uid,
-                      type: selectedType.name,
-                    );
+                await context.read<CategoryCubit>().loadAllCategories(uid: uid);
               }
 
               if (newCategory is CategoryEntity) {

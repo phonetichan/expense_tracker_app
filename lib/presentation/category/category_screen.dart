@@ -18,12 +18,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
   @override
   void initState() {
     super.initState();
-
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-
-    if (uid != null) {
-      context.read<CategoryCubit>().loadAllCategories(uid: uid);
-    }
   }
 
   @override
@@ -51,19 +45,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.deepPurple,
         foregroundColor: Colors.white,
-        onPressed: () async {
-          await appRouter.push('/category-form');
-
-          if (!mounted) return;
-
-          final uid =
-              FirebaseAuth.instance.currentUser?.uid;
-
-          if (uid != null) {
-            if (context.mounted) {
-              context.read<CategoryCubit>().loadAllCategories(uid: uid);
-            }
-          }
+        onPressed: () {
+           appRouter.push('/category-form');
         },
         child: const Icon(Icons.add),
       ),

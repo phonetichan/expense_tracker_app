@@ -47,10 +47,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
 
     final uid = FirebaseAuth.instance.currentUser!.uid;
-    context.read<CategoryCubit>().loadCategories(
-      uid: uid,
-      type: _selectedType.name,
-    );
+    context.read<CategoryCubit>().loadAllCategories(uid: uid);
   }
 
   @override

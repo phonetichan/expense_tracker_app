@@ -17,6 +17,9 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+subprojects {
+    project.evaluationDependsOn(":app")
     plugins.withType<com.android.build.gradle.BasePlugin> {
         dependencies.add("implementation", "org.checkerframework:checker-qual:3.47.0")
     }

@@ -34,20 +34,6 @@ class CategoryRepositoryImpl implements CategoryRepository {
   }
 
   @override
-  Future<List<CategoryEntity>> getCategories(String uid, String type) async {
-    final snapshot = await firestore
-        .collection('users')
-        .doc(uid)
-        .collection('categories')
-        .where('type', isEqualTo: type)
-        .get();
-
-    return snapshot.docs
-        .map<CategoryEntity>((doc) => CategoryModel.fromMap(doc.id, doc.data()))
-        .toList();
-  }
-
-  @override
   Future<List<CategoryEntity>> getAllCategories(String uid) async {
     final snapshot = await firestore
         .collection('users')

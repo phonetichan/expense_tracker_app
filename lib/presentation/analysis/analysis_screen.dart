@@ -22,11 +22,6 @@ class _AnalysisScreenState extends State<AnalysisScreen> {
   @override
   void initState() {
     super.initState();
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    if (uid != null) {
-      context.read<TransactionCubit>().loadTransactions();
-      context.read<CategoryCubit>().loadAllCategories(uid: uid);
-    }
   }
 
   Widget build(BuildContext context) {

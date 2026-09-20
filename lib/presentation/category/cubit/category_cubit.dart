@@ -14,27 +14,6 @@ class CategoryCubit extends Cubit<CategoryState> {
 
   CategoryCubit(this.repository) : super(CategoryInitial());
 
-  // void clear() {
-  //   currentCategories = [];
-  //   emit(const CategoryLoaded([]));
-  // }
-
-  Future<void> loadCategories({
-    required String uid,
-    required String type,
-  }) async {
-    try {
-      final categories = await repository.getCategories(uid, type);
-
-      currentCategories = categories;
-
-      emit(CategoryLoaded(List.from(currentCategories)));
-    } catch (e) {
-      emit(CategoryError(e.toString()));
-      rethrow;
-    }
-  }
-
   Future<void> loadAllCategories({
     required String uid,
   }) async {
